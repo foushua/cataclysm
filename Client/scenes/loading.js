@@ -10,8 +10,11 @@ export default class Loading extends Scene {
 
     preload() {
 
+        // Load audio assets..
+        this.load.audio('music:main', 'audios/musics/main.mp3');
+
         // Show loading..
-        this.add.text(this.cameras.main.width - 15, 5, 'Loading..', {
+        let status = this.add.text(this.cameras.main.width - 15, 5, 'Loading..', {
             color: '#FFFFFF',
             fontSize: 28
         }).setOrigin(1, 0);
