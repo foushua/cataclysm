@@ -11,7 +11,6 @@ export default class Main extends Scene {
     }
 
     create() {
-        new Logo(this, this.cameras.main.width / 2, this.cameras.main.height / 2);
         this.server.onConnect(error => {
             if (error) console.error(error);
             console.log('We are ready to work harder! 💪😎');
