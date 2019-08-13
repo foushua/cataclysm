@@ -1,5 +1,4 @@
 import { Scene } from 'phaser';
-import Websocket from 'socket.io-client';
 
 export default class Main extends Scene {
 
@@ -7,20 +6,9 @@ export default class Main extends Scene {
         super({ key: 'main' });
     }
 
-    preload() {
-        // map made with Tiled in JSON format
-        this.load.tilemapTiledJSON('map', 'map.json');
-        // tiles in spritesheet 
-        this.load.spritesheet('tiles', 'images/tiles.png', { frameWidth: 70, frameHeight: 70});
-        // simple coin image
-        this.load.image('coin', 'images/coinGold.png');
-        this.load.image('spikeTrap', 'images/spikesTrap.png');
-        // player animations
-        this.load.atlas('player', 'images/cat.png', 'cat.json');
-    }
+    preload() {}
 
     init() {
-        this.server = Websocket(`${location.hostname}:9208`);
 
         this.map;
         this.player;
@@ -39,14 +27,14 @@ export default class Main extends Scene {
     create() {
 
         // load the map 
-        this.map = this.make.tilemap({key: 'map'});
+        this.map = this.make.tilemap({key: 'maps'});
     
         let graphics = this.add.graphics();
         
         // tiles for the ground layer
-        let groundTiles = this.map.addTilesetImage('tiles');
+        this.groundTiles = this.map.addTilesetImage('tiles');
         // create the ground layer
-        this.groundLayer = this.map.createDynamicLayer('World', groundTiles, 0, 0);
+        this.groundLayer = this.map.createDynamicLayer('World', this.groundTiles, 0, 0);
         // the player will collide with this layer
         this.groundLayer.setCollisionByExclusion([-1]);
      
@@ -55,7 +43,7 @@ export default class Main extends Scene {
         this.physics.world.bounds.height = this.groundLayer.height;
     
         // create the player sprite    
-        this.player = this.physics.add.sprite(166, 444, 'player'); 
+        this.player = this.physics.add.sprite(400, 1420, 'player'); 
         this.player.setScale(.3)
               .setSize(330,275)
               .setOffset(40,45)
@@ -86,6 +74,11 @@ export default class Main extends Scene {
         this.anims.create({
             key: 'idle',
             frames: [{key: 'player', frame: 'Idle'}],
+            frameRate: 10,
+        });
+        this.anims.create({
+            key: 'ded',
+            frames: [{key: 'player', frame: 'Ded'}],
             frameRate: 10,
         });
     
@@ -161,9 +154,6 @@ export default class Main extends Scene {
         }
     }
 
-    render(){
-    }
-
     collectCoin(sprite, tile) {
         this.coinLayer.removeTileAt(tile.x, tile.y); // remove the tile/coin
         this.score ++; // increment the score
@@ -173,16 +163,36 @@ export default class Main extends Scene {
 
     killPlayer (sprite, tile) {
         this.alive = false
-        console.log('function call');
         this.physics.world.colliders.destroy();
         this.cameras.main.stopFollow();
+        this.player.anims.play('ded', true);
         
         this.player.body.allowRotation = true
-        this.player.body.angularVelocity = 1000
+        this.player.body.angularVelocity = 500
         this.player.body.setVelocityX((Math.random() * 1000)-500)
         this.player.body.setVelocityY(-200);  
     
         this.player.setCollideWorldBounds(false);
+
+        // Player respawn
+        setTimeout(() => {
+            this.cameras.main.startFollow(this.player);
+            this.alive = true
+
+            this.physics.add.collider(this.groundLayer, this.player)
+            this.physics.add.collider(this.player, this.spikes, this.killPlayer, null, this);
+            this.physics.add.overlap(this.player, this.coinLayer);
+  
+
+            this.player.setCollideWorldBounds(true);
+            this.player.setVelocity(0,0)
+            this.player.body.angularVelocity = 0
+            this.player.setX(400)
+            this.player.setY(1420)
+            this.player.setRotation(0)
+            this.player.anims.play('idle',true)
+            this.player.body.allowRotation = false
+        }, 3000);
     
         return false;
     }
