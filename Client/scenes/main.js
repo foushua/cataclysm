@@ -6,129 +6,169 @@ export default class Main extends Scene {
         super({ key: 'main' });
     }
 
-    preload() {}
-
     init() {
+        this.maps;
+        this.tiles = {};
+        this.layers = {};
+        this.player = null;
+        this.cursors = null;
+        this.traps = {};
 
-        this.map;
-        this.player;
-        this.spikes;
-        this.spikeObjects;
-        this.cursors;
-        this.groundLayer;
-        this.coinLayer;
-        this.trapLayer;
-        this.text;
-        this.debug;
-        this.score = 0;
+        this.debug = null;
         this.alive = true;
     }
 
-    create() {
-
-        // load the map 
-        this.map = this.make.tilemap({key: 'maps'});
     
-        let graphics = this.add.graphics();
+    /**
+     * This function is used to create world of your imagination.
+     */
+    createWorld() {
+        this.maps = this.make.tilemap({ key: 'maps' });
+        this.tiles.map = this.maps.addTilesetImage('tiles');
+        this.layers.map = this.maps.createDynamicLayer('World', this.tiles.map, 0, 0);
         
-        // tiles for the ground layer
-        this.groundTiles = this.map.addTilesetImage('tiles');
-        // create the ground layer
-        this.groundLayer = this.map.createDynamicLayer('World', this.groundTiles, 0, 0);
-        // the player will collide with this layer
-        this.groundLayer.setCollisionByExclusion([-1]);
-     
-        // set the boundaries of our game world
-        this.physics.world.bounds.width = this.groundLayer.width;
-        this.physics.world.bounds.height = this.groundLayer.height;
-    
-        // create the player sprite    
-        this.player = this.physics.add.sprite(400, 1420, 'player'); 
+         // The player will collide with this layer.
+        this.layers.map.setCollisionByExclusion([-1]);
+
+        // Set the boundaries of our world.
+        this.physics.world.bounds.width = this.layers.map.width;
+        this.physics.world.bounds.height = this.layers.map.height;
+    }
+
+    /**
+     * This function is used to create the player.
+     * @param {String} id
+     * @param {Object} position
+     */
+    createPlayer(id = null, position = { x: 400, y: 1420 }) {
+        this.player = this.physics.add.sprite(position.x, position.y, 'player');
         this.player.setScale(.3)
-              .setSize(330,275)
-              .setOffset(40,45)
-              .setBounce(0) // our player will bounce from items
-              .setCollideWorldBounds(true) // don't go out of the map
-    
-        this.physics.add.collider(this.groundLayer, this.player)
-      
-        // add palyer controls
+            .setSize(330,275)
+            .setOffset(40,45)
+            .setBounce(0) // our player will bounce from items
+            .setCollideWorldBounds(true); // don't go out of the map
+
+        // Register the id of the player.
+        this.player.id = id;
+
+        // The player collide with layers.
+        this.physics.add.collider(this.layers.map, this.player);
+
+        // Add player controls
         this.cursors = this.input.keyboard.createCursorKeys();
-    
+    }
+
+    /**
+     * This function is used to apply all camera settings.
+     */
+    manageCamera() {
         // set bounds so the camera won't go outside the game world
-        this.cameras.main.setBounds(0, 0, this.map.widthInPixels, this.map.heightInPixels);
+        this.cameras.main.setBounds(0, 0, this.maps.widthInPixels, this.maps.heightInPixels);
         // make the camera follow the player
         this.cameras.main.startFollow(this.player);
-        
         // set background color, so the sky is not black    
         this.cameras.main.setBackgroundColor('#ccccff'); 
-    
+    }
+
+    /**
+     * This function is used to register all animations.
+     */
+    registerAnimations() {
         this.anims.create({
-            key: 'walk',
-            frames: this.anims.generateFrameNames('player', { prefix: 'Run_', start: 1, end: 24, zeroPad: 3 }),
-            frameRate: 120,
-            repeat: -1
+            key: 'walk', frameRate: 120, repeat: -1,
+            frames: this.anims.generateFrameNames('player', { prefix: 'Run_', start: 1, end: 24, zeroPad: 3 })
         });
     
-        // idle with only one frame, so repeat is not neaded
         this.anims.create({
-            key: 'idle',
-            frames: [{key: 'player', frame: 'Idle'}],
-            frameRate: 10,
+            key: 'idle', frameRate: 10,
+            frames: [{ key: 'player', frame: 'Idle' }]
         });
+        
         this.anims.create({
-            key: 'ded',
-            frames: [{key: 'player', frame: 'Ded'}],
-            frameRate: 10,
+            key: 'ded', frameRate: 10,
+            frames: [{ key: 'player', frame: 'Ded' }]
         });
-    
-        // coin image used as tileset
-        let coinTiles = this.map.addTilesetImage('coin');
-        // add coins as tiles
-        this.coinLayer = this.map.createDynamicLayer('Coins', coinTiles, 0, 0);
-    
-        this.coinLayer.setTileIndexCallback(17, this.collectCoin, this); // the coin id is 17
-        // when the player overlaps with a tile with index 17, collectCoin will be called    
-        this.physics.add.overlap(this.player, this.coinLayer);
-    
-        this.spikes = this.physics.add.group({
+    }
+
+    /**
+     * This function is used to register and handle all spikes.
+     */
+    manageSpikes() {
+        this.traps.spikes = this.physics.add.group({
             allowGravity: false,
             immovable: true
         });
 
-        this.spikeObjects = this.map.getObjectLayer('Traps')['objects'];
-
-        this.spikeObjects.forEach(spikeObject => {
+        let spikeObjects = this.maps.getObjectLayer('Traps')['objects'];
+        spikeObjects.forEach(spikeObject => {
             // Add new spikes to our sprite group, change the start y position to meet the platform
-            const spike = this.spikes.create(spikeObject.x, spikeObject.y - spikeObject.height, 'spikeTrap').setOrigin(0, 0);
-          });
-
-          this.physics.add.collider(this.player, this.spikes, this.killPlayer, null, this);
-    
-        this.text = this.add.text(20, 570, `💰:0`, {
-            fontSize: '20px',
-            fill: '#ffffff',
-            
+            this.traps.spikes.create(spikeObject.x, spikeObject.y - spikeObject.height, 'spikeTrap').setOrigin(0, 0);
         });
-        this.text.setScrollFactor(0);
+        this.physics.add.collider(this.player, this.traps.spikes, this.killPlayer, null, this);
+    }
 
-        this.debug = this.add.text(20, 20, this.debugInfo(), {
+    /**
+     * This function is used to manage the death of a player
+     */
+    killPlayer (sprite, tile) {
+        this.alive = false
+        this.physics.world.colliders.destroy();
+        this.cameras.main.stopFollow();
+        this.player.anims.play('ded', true);
+        
+        this.player.body.allowRotation = true
+        this.player.body.angularVelocity = 500
+        this.player.body.setVelocityX((Math.random() * 1000)-500)
+        this.player.body.setVelocityY(-200);  
+    
+        this.player.setCollideWorldBounds(false);
+
+        // Player respawn
+        setTimeout(() => {
+            this.cameras.main.startFollow(this.player);
+            this.alive = true
+
+            this.physics.add.collider(this.layers.map, this.player)
+            this.physics.add.collider(this.player, this.traps.spikes, this.killPlayer, null, this);
+
+            this.player.setCollideWorldBounds(true);
+            this.player.setVelocity(0,0)
+            this.player.body.angularVelocity = 0
+            this.player.setX(400)
+            this.player.setY(1420)
+            this.player.setRotation(0)
+            this.player.anims.play('idle',true)
+            this.player.body.allowRotation = false
+        }, 3000);
+    }
+
+    /**
+     * These function is used to display all debug informations.
+     */
+    debugging() {
+        return `Debugging Cataclysm (Phaser ${Phaser.VERSION})
+        \nCoordinates: X:${Math.floor(this.player.x)} Y:${Math.floor(this.player.y)}`;
+    }
+
+    create() {
+
+        this.createWorld();
+        this.createPlayer();
+
+        this.manageCamera();
+        this.registerAnimations();
+        this.manageSpikes();
+    
+        this.debug = this.add.text(20, 20, this.debugging(), {
             fontSize: '20px',
             fill: '#ff0',
             backgroundColor: '#000',
             padding: { x:10, y:5 }
-        });
-        this.debug.setScrollFactor(0);
-    }
-
-    debugInfo(){
-        return `Debugging Cataclysm (Phaser ${Phaser.VERSION})
-        \nCoordinates: X:${Math.floor(this.player.x)} Y:${Math.floor(this.player.y)}
-        `
-    }  
+        }).setScrollFactor(0);
+    } 
 
     update(time, delta) {  
-        this.debug.setText(this.debugInfo())
+        this.debug.setText(this.debugging())
 
         if (this.alive) {
             if (this.cursors.left.isDown)
@@ -154,46 +194,4 @@ export default class Main extends Scene {
         }
     }
 
-    collectCoin(sprite, tile) {
-        this.coinLayer.removeTileAt(tile.x, tile.y); // remove the tile/coin
-        this.score ++; // increment the score
-        this.text.setText(`💰:${this.score}`); // set the text to show the current score
-        return false;
-    }
-
-    killPlayer (sprite, tile) {
-        this.alive = false
-        this.physics.world.colliders.destroy();
-        this.cameras.main.stopFollow();
-        this.player.anims.play('ded', true);
-        
-        this.player.body.allowRotation = true
-        this.player.body.angularVelocity = 500
-        this.player.body.setVelocityX((Math.random() * 1000)-500)
-        this.player.body.setVelocityY(-200);  
-    
-        this.player.setCollideWorldBounds(false);
-
-        // Player respawn
-        setTimeout(() => {
-            this.cameras.main.startFollow(this.player);
-            this.alive = true
-
-            this.physics.add.collider(this.groundLayer, this.player)
-            this.physics.add.collider(this.player, this.spikes, this.killPlayer, null, this);
-            this.physics.add.overlap(this.player, this.coinLayer);
-  
-
-            this.player.setCollideWorldBounds(true);
-            this.player.setVelocity(0,0)
-            this.player.body.angularVelocity = 0
-            this.player.setX(400)
-            this.player.setY(1420)
-            this.player.setRotation(0)
-            this.player.anims.play('idle',true)
-            this.player.body.allowRotation = false
-        }, 3000);
-    
-        return false;
-    }
 }
