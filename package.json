@@ -22,10 +22,9 @@
   },
   "dependencies": {
     "@babel/polyfill": "^7.4.4",
-    "@geckos.io/client": "^1.1.6",
-    "@geckos.io/server": "^1.1.6",
     "lodash": "^4.17.15",
-    "phaser": "^3.19.0"
+    "phaser": "^3.19.0",
+    "socket.io": "^2.2.0"
   },
   "devDependencies": {
     "cross-env": "^5.2.0",

@@ -1,13 +1,9 @@
 const _ = require('lodash');
-const Geckos = require('@geckos.io/server').default;
-const { iceServers } = require('@geckos.io/server');
+const Websocket = require('socket.io')(9208, {});
 
-const Server = Geckos({iceServers: process.env.NODE_ENV === 'production' ? iceServers : []});
-
-Server.listen();
-Server.onConnection(socket => {
-    console.log(`${socket.id} was connected`);
-    socket.onDisconnect(() => {
-      console.log(`${socket.id} was disconnected`);
+Websocket.on('connect', (Socket) => {
+	console.log(`${Socket.id} was connected..`);
+	Socket.on('disconnect', () => {
+        console.log(`${Socket.id} was disconnected..`);
     });
 });
