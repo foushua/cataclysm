@@ -15,7 +15,6 @@ export default class Main extends Scene {
         this.traps = {};
 
         this.debug = null;
-        this.alive = true;
     }
 
     
@@ -50,6 +49,9 @@ export default class Main extends Scene {
 
         // Register the id of the player.
         this.player.id = id;
+
+        // Set the player alive
+        this.player.alive = true;
 
         // The player collide with layers.
         this.physics.add.collider(this.layers.map, this.player);
@@ -111,7 +113,7 @@ export default class Main extends Scene {
      * This function is used to manage the death of a player
      */
     killPlayer (sprite, tile) {
-        this.alive = false
+        this.player.alive = false
         this.physics.world.colliders.destroy();
         this.cameras.main.stopFollow();
         this.player.anims.play('ded', true);
@@ -126,7 +128,7 @@ export default class Main extends Scene {
         // Player respawn
         setTimeout(() => {
             this.cameras.main.startFollow(this.player);
-            this.alive = true
+            this.player.alive = true
 
             this.physics.add.collider(this.layers.map, this.player)
             this.physics.add.collider(this.player, this.traps.spikes, this.killPlayer, null, this);
@@ -173,7 +175,7 @@ export default class Main extends Scene {
     update(time, delta) {  
         if (process.env.NODE_ENV === 'development') this.debug.setText(this.debugging());
 
-        if (this.alive) {
+        if (this.player.alive) {
             if (this.cursors.left.isDown)
             {
                 this.player.body.setVelocityX(-500); // move left
