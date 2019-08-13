@@ -15,7 +15,7 @@ class Game extends Phaser.Game {
             disableContextMenu: true,
             enableDebug: process.env.NODE_ENV === 'development',
             input: { keyboard: true, mouse: true, touch: false, gamepad: false },
-            physics: { default: 'arcade', arcade: { debug: false, gravity: { y: 1200 } }},
+            physics: { default: 'arcade', arcade: { debug: true, gravity: { y: 1200 } }},
             scale: {
                 mode: Phaser.Scale.WIDTH_CONTROLS_HEIGHT ,
                 autoCenter: Phaser.Scale.CENTER_BOTH

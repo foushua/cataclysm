@@ -1,4 +1,5 @@
 import { Scene } from 'phaser';
+import Websocket from 'socket.io-client';
 
 export default class Main extends Scene {
 
@@ -10,29 +11,33 @@ export default class Main extends Scene {
         // map made with Tiled in JSON format
         this.load.tilemapTiledJSON('map', 'map.json');
         // tiles in spritesheet 
-        this.load.spritesheet('tiles', 'images/tiles.png', {frameWidth: 70, frameHeight: 70});
+        this.load.spritesheet('tiles', 'images/tiles.png', { frameWidth: 70, frameHeight: 70});
         // simple coin image
         this.load.image('coin', 'images/coinGold.png');
-        this.load.image('spikeTrap', 'images/spikeTrap.png');
+        this.load.image('spikeTrap', 'images/spikesTrap.png');
         // player animations
         this.load.atlas('player', 'images/cat.png', 'cat.json');
     }
 
-    init({ server }) {
-        this.server = server;
+    init() {
+        this.server = Websocket(`${location.hostname}:9208`);
 
         this.map;
         this.player;
+        this.spikes;
+        this.spikeObjects;
         this.cursors;
         this.groundLayer;
         this.coinLayer;
         this.trapLayer;
         this.text;
+        this.debug;
         this.score = 0;
         this.alive = true;
     }
 
     create() {
+
         // load the map 
         this.map = this.make.tilemap({key: 'map'});
     
@@ -50,7 +55,7 @@ export default class Main extends Scene {
         this.physics.world.bounds.height = this.groundLayer.height;
     
         // create the player sprite    
-        this.player = this.physics.add.sprite(200, 200, 'player'); 
+        this.player = this.physics.add.sprite(166, 444, 'player'); 
         this.player.setScale(.3)
               .setSize(330,275)
               .setOffset(40,45)
@@ -93,21 +98,44 @@ export default class Main extends Scene {
         // when the player overlaps with a tile with index 17, collectCoin will be called    
         this.physics.add.overlap(this.player, this.coinLayer);
     
-        let spikeTiles = this.map.addTilesetImage('spikeTrap');
-        this.trapLayer = this.map.createDynamicLayer('Traps', spikeTiles, 0, 0);
-    
-        this.trapLayer.setTileIndexCallback(18, this.killPlayer, this);
-        this.physics.add.overlap(this.player, this.trapLayer);
-        this.physics.add.collider(this.trapLayer, this.player)
+        this.spikes = this.physics.add.group({
+            allowGravity: false,
+            immovable: true
+        });
+
+        this.spikeObjects = this.map.getObjectLayer('Traps')['objects'];
+
+        this.spikeObjects.forEach(spikeObject => {
+            // Add new spikes to our sprite group, change the start y position to meet the platform
+            const spike = this.spikes.create(spikeObject.x, spikeObject.y - spikeObject.height, 'spikeTrap').setOrigin(0, 0);
+          });
+
+          this.physics.add.collider(this.player, this.spikes, this.killPlayer, null, this);
     
         this.text = this.add.text(20, 570, `💰:0`, {
             fontSize: '20px',
-            fill: '#ffffff'
+            fill: '#ffffff',
+            
         });
         this.text.setScrollFactor(0);
+
+        this.debug = this.add.text(20, 20, this.debugInfo(), {
+            fontSize: '20px',
+            fill: '#ff0',
+            backgroundColor: '#000',
+            padding: { x:10, y:5 }
+        });
+        this.debug.setScrollFactor(0);
     }
 
-    update(time, delta) {    
+    debugInfo(){
+        return `Debugging Cataclysm (Phaser ${Phaser.VERSION})
+        \nCoordinates: X:${Math.floor(this.player.x)} Y:${Math.floor(this.player.y)}
+        `
+    }  
+
+    update(time, delta) {  
+        this.debug.setText(this.debugInfo())
 
         if (this.alive) {
             if (this.cursors.left.isDown)
@@ -131,6 +159,9 @@ export default class Main extends Scene {
                 this.player.body.setVelocityY(-800);        
             }
         }
+    }
+
+    render(){
     }
 
     collectCoin(sprite, tile) {
