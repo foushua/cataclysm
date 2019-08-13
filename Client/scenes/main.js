@@ -147,6 +147,7 @@ export default class Main extends Scene {
      */
     debugging() {
         return `Debugging Cataclysm (Phaser ${Phaser.VERSION})
+        \nFramerate: ${Math.floor(this.game.loop.actualFps)}
         \nCoordinates: X:${Math.floor(this.player.x)} Y:${Math.floor(this.player.y)}`;
     }
 
@@ -163,7 +164,7 @@ export default class Main extends Scene {
             fontSize: '20px',
             fill: '#ff0',
             backgroundColor: '#000',
-            padding: { x:10, y:5 }
+            padding: { x:10, y:10 }
         }).setScrollFactor(0);
     } 
 
