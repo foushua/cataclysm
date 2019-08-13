@@ -18,7 +18,6 @@ export default class Loading extends Scene {
         this.load.spritesheet('tiles', 'images/tiles.png', { frameWidth: 70, frameHeight: 70});
         
         // Load images assets
-        this.load.image('coin', 'images/coinGold.png');
         this.load.image('spikeTrap', 'images/spikesTrap.png');
 
         // Load atlas assets
