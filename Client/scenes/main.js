@@ -159,17 +159,19 @@ export default class Main extends Scene {
         this.manageCamera();
         this.registerAnimations();
         this.manageSpikes();
-    
-        this.debug = this.add.text(20, 20, this.debugging(), {
-            fontSize: '20px',
-            fill: '#ff0',
-            backgroundColor: '#000',
-            padding: { x:10, y:10 }
-        }).setScrollFactor(0);
+
+        if (process.env.NODE_ENV === 'development') {
+            this.debug = this.add.text(20, 20, this.debugging(), {
+                fontSize: '20px',
+                fill: '#ff0',
+                backgroundColor: '#000',
+                padding: { x:10, y:10 }
+            }).setScrollFactor(0);
+        }
     } 
 
     update(time, delta) {  
-        this.debug.setText(this.debugging())
+        if (process.env.NODE_ENV === 'development') this.debug.setText(this.debugging());
 
         if (this.alive) {
             if (this.cursors.left.isDown)
