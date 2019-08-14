@@ -192,6 +192,9 @@ export default class Main extends Scene {
     
         this.player.setCollideWorldBounds(false);
 
+        this.audios.effect.knife.play();
+        this.audios.effect.catDeath.play();
+
         tile.setAlpha(1);
         setTimeout(() => {
             tile.setAlpha(0);
@@ -225,7 +228,7 @@ export default class Main extends Scene {
         this.layers.fishLayer.removeTileAt(tile.x, tile.y);
         this.effects.speed = true;
         this.message.setText('poisson !!');
-        // rocket.play();
+        this.audios.effect.rocket.play();
         setTimeout(() => {
             this.effects.speed = false;
             this.message.setText('');
@@ -241,7 +244,7 @@ export default class Main extends Scene {
         this.layers.chocoLayer.removeTileAt(tile.x, tile.y);
         this.effects.slow = true;
         this.message.setText('Beurk chocolat !!');
-        // vomit.play();
+        this.audios.effect.vomit.play();
         setTimeout(() => {
             this.effects.slow = false;
             this.message.setText('');
@@ -261,7 +264,7 @@ export default class Main extends Scene {
             frightened = setInterval(() => { this.player.body.setVelocityY(-5000) }, 100);
         }
         this.message.setText('Aaaaaaah un concombre !!');
-        // scream.play();
+        this.audios.effect.scream.play();
         setTimeout(() => {
             this.effects.fear = false;
             clearInterval(frightened);
@@ -278,10 +281,10 @@ export default class Main extends Scene {
         this.layers.birdLayer.removeTileAt(tile.x, tile.y);
         this.effects.fly = true;
         this.message.setText('Je voooole !!');
-        // flute.play();
+        this.audios.effect.flute.play();
         setTimeout(() => {
             this.effects.fly = false;
-            // flute.stop();
+            this.audios.effect.flute.stop();
             this.message.setText('');
         }, 3000);
     }
@@ -365,11 +368,16 @@ export default class Main extends Scene {
             }  
             
             if (this.cursors.up.isDown && this.player.body.onFloor()) {
+                this.audios.effect.jump.play();
                 this.player.body.setVelocityY(-800); // Jump
             }
 
             if (!this.player.body.onFloor()) {
                 this.player.anims.play('jump', true); // play jump animation
+            }
+
+            if (this.cursors.space.isDown) {
+                this.audios.effect.meow.play();
             }
 
         }
