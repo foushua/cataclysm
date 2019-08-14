@@ -11,20 +11,13 @@ export default class Main extends Scene {
         this.tiles = {};
         this.layers = {};
         this.player = null;
-        this.cursors = null;
         this.traps = {};
-        this.text = null;
-        this.audios = { music: {}, effect: {} };
-
+        this.message = null;
         this.debug = null;
-
-        this.effects = {
-            fear: false,
-            speed: false,
-            slow: false
-        }; // Effets des bonus
+        this.audios = { music: {}, effect: {} };
+        this.effects = { fear: false, speed: false, slow: false };
+        this.cursors = this.input.keyboard.createCursorKeys();
     }
-
     
     /**
      * This function is used to create world of your imagination.
@@ -32,36 +25,30 @@ export default class Main extends Scene {
     createWorld() {
         this.maps = this.make.tilemap({ key: 'maps' });
 
-        // Tiles et calque d'origine
+        // Tiles and original layer
         this.tiles.tiles = this.maps.addTilesetImage('tiles');
         this.layers.tiles = this.maps.createDynamicLayer('World', this.tiles.tiles, 0, 0);
-        this.layers.tiles.setCollisionByExclusion([-1]); // The ;player will collide with this layer.
+        this.layers.tiles.setCollisionByExclusion([-1]); // The player will collide with this layer
         
-        // Tiles et calque de la mer
+        // Tiles and layer of the sea
         this.tiles.sea = this.maps.addTilesetImage('sea');
         this.layers.sea = this.maps.createDynamicLayer('Sea', this.tiles.sea, 0, 0);
         
-        // Tiles et calque plateformes
+        // Tiles and layer platforms
         this.tiles.platform = this.maps.addTilesetImage('plateformes'); 
         this.layers.platform = this.maps.createDynamicLayer('Plateformes', this.tiles.platform, 0, 0);
-        this.layers.platform.setCollisionByExclusion([-1]); // The player will collide with this layer.
+        this.layers.platform.setCollisionByExclusion([-1]); // The player will collide with this layer
 
-
-        
-
-
-
-        // Set the boundaries of our world.
+        // Set the boundaries of our world
         this.physics.world.bounds.width = this.layers.tiles.width;
         this.physics.world.bounds.height = this.layers.tiles.height;
     }
 
     /**
      * This function is used to create the player.
-     * @param {String} id
      * @param {Object} position
      */
-    createPlayer(id = null, position = { x: 324, y: 1336 }) {
+    createPlayer(position = { x: 324, y: 1336 }) {
         this.player = this.physics.add.sprite(position.x, position.y, 'player');
         this.player.setScale(1)
             .setSize(95,120)
@@ -69,52 +56,47 @@ export default class Main extends Scene {
             .setBounce(0) // our player will bounce from items
             .setCollideWorldBounds(true); // don't go out of the map
 
-        // Register the id of the player.
-        this.player.id = id;
-
         // Set the player alive
         this.player.alive = true;
 
-        // The player collide with layers.
+        // The player collide with layers
         this.physics.add.collider(this.layers.tiles, this.player);
         this.physics.add.collider(this.layers.platform, this.player);
-
-        // Add player controls
-        this.cursors = this.input.keyboard.createCursorKeys();
-
-        this.createBonuses();
     }
     
-    createBonuses(){
-        // poisson
+    /**
+     * This function is used to create all bonus.
+     */
+    createBonus() {
+        // Fish
         this.tiles.fishTiles = this.maps.addTilesetImage('fish');
         this.layers.fishLayer = this.maps.createDynamicLayer('Fish', this.tiles.fishTiles, 0, 0);
     
         this.layers.fishLayer.setTileIndexCallback(32, this.collectFish, this);
         this.physics.add.overlap(this.player, this.layers.fishLayer);
 
-        //choco
+        // Chocolate
         this.tiles.chocoTiles = this.maps.addTilesetImage('choco');
         this.layers.chocoLayer = this.maps.createDynamicLayer('Choco', this.tiles.chocoTiles, 0, 0);
 
         this.layers.chocoLayer.setTileIndexCallback(33, this.collectChoco, this);
         this.physics.add.overlap(this.player, this.layers.chocoLayer);
 
-        //Concombre
+        // Cucumber
         this.tiles.cucumTiles = this.maps.addTilesetImage('cucumber');
         this.layers.cucumLayer = this.maps.createDynamicLayer('Cucumber', this.tiles.cucumTiles, 0, 0);
 
         this.layers.cucumLayer.setTileIndexCallback(34, this.collectCucum, this);
         this.physics.add.overlap(this.player, this.layers.cucumLayer);
 
-        //oiseau
+        // Bird
         this.tiles.birdTiles = this.maps.addTilesetImage('bird');
         this.layers.birdLayer = this.maps.createDynamicLayer('Bird', this.tiles.birdTiles, 0, 0);
 
         this.layers.birdLayer.setTileIndexCallback(35, this.collectBird, this);
         this.physics.add.overlap(this.player, this.layers.birdLayer);
 
-        //Trampoline
+        // Trampoline
         this.tiles.trampTiles = this.maps.addTilesetImage('trampoline');
         this.layers.trampLayer = this.maps.createDynamicLayer('Tramp', this.tiles.trampTiles, 0, 0);
 
@@ -168,7 +150,7 @@ export default class Main extends Scene {
         this.anims.create({
             key: 'jump', frameRate: 60, repeat: -1,
             frames: this.anims.generateFrameNames('player', { prefix: 'Jump_', start: 1, end: 36, zeroPad: 3})
-        })
+        });
         
         this.anims.create({
             key: 'ded', frameRate: 10,
@@ -212,7 +194,7 @@ export default class Main extends Scene {
 
         tile.setAlpha(1);
         setTimeout(() => {
-            tile.setAlpha(0)
+            tile.setAlpha(0);
         }, 5000)
 
         // Player respawn
@@ -234,55 +216,75 @@ export default class Main extends Scene {
         }, 2000);
     }
 
-    // Bonuses functions
-    ////////////////////////////
-    collectFish(sprite, tile){
-        console.log("fish")
+    /**
+     * This function is used to collect and handle the fish.
+     * @param {Object} sprite 
+     * @param {Object} tile 
+     */
+    collectFish(sprite, tile) {
         this.layers.fishLayer.removeTileAt(tile.x, tile.y);
         this.effects.speed = true;
-        this.text.setText('poisson !!');
-        // rocket.play()
+        this.message.setText('poisson !!');
+        // rocket.play();
         setTimeout(() => {
-            this.effects.speed=false, this.text.setText('')}, 2000)
-        return false;
+            this.effects.speed = false;
+            this.message.setText('');
+        }, 2000);
     }
 
-    collectChoco(sprite, tile){
+    /**
+     * This function is used to collect and handle the chocolate.
+     * @param {Object} sprite 
+     * @param {Object} tile
+     */
+    collectChoco(sprite, tile) {
         this.layers.chocoLayer.removeTileAt(tile.x, tile.y);
         this.effects.slow = true;
-        this.text.setText('Beurk chocolat !!');
-        // vomit.play()
+        this.message.setText('Beurk chocolat !!');
+        // vomit.play();
         setTimeout(() => {
-            this.effects.slow=false, this.text.setText('')}, 2000)
-        return false;
+            this.effects.slow = false;
+            this.message.setText('');
+        }, 2000);
     }
 
-    collectCucum(sprite, tile){
-        let frightened
+    /**
+     * This function is used to collect and handle the cucumber.
+     * @param {Object} sprite 
+     * @param {Object} tile
+     */
+    collectCucum(sprite, tile) {
+        let frightened;
         this.layers.cucumLayer.removeTileAt(tile.x, tile.y);
         this.effects.fear = true;
-        if (this.effects.fear){
-            frightened = setInterval(() => {this.player.body.setVelocityY(-5000)}, 100)
-             // jump up
+        if (this.effects.fear) {
+            frightened = setInterval(() => { this.player.body.setVelocityY(-5000) }, 100);
         }
-        this.text.setText('Aaaaaaah un concombre !!');
-        // scream.play()
+        this.message.setText('Aaaaaaah un concombre !!');
+        // scream.play();
         setTimeout(() => {
-            this.effects.fear=false, clearInterval(frightened), this.text.setText('')}, 1800)
-        return false;
+            this.effects.fear = false;
+            clearInterval(frightened);
+            this.message.setText('');
+        }, 1800);
     }
 
-    collectBird(sprite, tile){
+    /**
+     * This function is used to collect and handle the bird.
+     * @param {Object} sprite 
+     * @param {Object} tile
+     */
+    collectBird(sprite, tile) {
         this.layers.birdLayer.removeTileAt(tile.x, tile.y);
         this.effects.fly = true;
-        this.text.setText('Je voooole !!');
-        // flute.play()
+        this.message.setText('Je voooole !!');
+        // flute.play();
         setTimeout(() => {
-            this.effects.fly=false, flute.stop(), this.text.setText('')}, 3000)
-        return false;
+            this.effects.fly = false;
+            // flute.stop();
+            this.message.setText('');
+        }, 3000);
     }
-
-
 
     /**
      * These function is used to display all debug informations.
@@ -293,21 +295,28 @@ export default class Main extends Scene {
         \nCoordinates: X:${Math.floor(this.player.x)} Y:${Math.floor(this.player.y)}`;
     }
 
+    /**
+     * This function is native to Phaser.io, is used to create the scene.
+     */
     create() {
-        this.text = this.add.text(20, 570, '0', {
-            fontSize: '20px',
-            fill: '#ffffff'
-        }).setScrollFactor(0);
-
+        
         this.createWorld();
         this.registerAudios();
 
         this.createPlayer();
+        this.createBonus();
         this.manageCamera();
 
         this.registerAnimations();
-        // this.manageSpikes();
+        // this.manageSpikes(); // Broken
 
+        // Create message displayed to screen
+        this.message = this.add.text(20, 570, null, {
+            fontSize: '20px',
+            fill: '#ffffff'
+        }).setScrollFactor(0);
+
+        // Create the debugging
         if (process.env.NODE_ENV === 'development') {
             this.debug = this.add.text(20, 20, this.debugging(), {
                 fontSize: '20px',
@@ -318,11 +327,13 @@ export default class Main extends Scene {
         }
     } 
 
-    update(time, delta) {  
+    /**
+     * This function is native to Phaser.io, is used to update the scene.
+     */
+    update() {  
         if (process.env.NODE_ENV === 'development') this.debug.setText(this.debugging());
 
-        let moveSpeed
-
+        let moveSpeed;
         if (this.effects.fear){
             moveSpeed = 0;
         } else if (this.effects.speed) {
@@ -334,38 +345,31 @@ export default class Main extends Scene {
         }
 
         if (this.player.alive) {
-            if (this.cursors.left.isDown)
-            {
+            if (this.cursors.left.isDown) {
                 this.player.body.setVelocityX(-moveSpeed); // move left
-                this.player.flipX= true; // flip the sprite to the left
-
-                if (this.player.body.onFloor()){
+                this.player.flipX = true; // flip the sprite to the left
+                if (this.player.body.onFloor()) {
                     this.player.anims.play('walk', true); // play walk animation
                 }
-            }
-            else if (this.cursors.right.isDown)
-            {
+            } else if (this.cursors.right.isDown) {
                 this.player.body.setVelocityX(moveSpeed); // move right
                 this.player.flipX = false; // use the original sprite looking to the right
-
-                if (this.player.body.onFloor()){
-                    this.player.anims.play('walk', true); // play walk animatio
+                if (this.player.body.onFloor()) {
+                    this.player.anims.play('walk', true); // play walk animation
                 }
             } else {
                 this.player.body.setVelocityX(0);
-                if (this.player.body.onFloor()){
-                    this.player.anims.play('idle', true);
+                if (this.player.body.onFloor()) {
+                    this.player.anims.play('idle', true); // play idle animation
                 }
             }  
             
-            if (this.cursors.up.isDown && this.player.body.onFloor())
-            {
-                this.player.body.setVelocityY(-800); 
+            if (this.cursors.up.isDown && this.player.body.onFloor()) {
+                this.player.body.setVelocityY(-800); // Jump
             }
 
-            if (!this.player.body.onFloor()){
-
-                this.player.anims.play('jump', true);
+            if (!this.player.body.onFloor()) {
+                this.player.anims.play('jump', true); // play jump animation
             }
 
         }
