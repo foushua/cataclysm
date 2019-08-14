@@ -7,7 +7,7 @@ export default class Main extends Scene {
     }
 
     init() {
-        this.maps;
+        this.maps = null;
         this.tiles = {};
         this.layers = {};
         this.player = null;
@@ -113,34 +113,34 @@ export default class Main extends Scene {
      * This function is used to manage the death of a player
      */
     killPlayer (sprite, tile) {
-        this.player.alive = false
+        this.player.alive = false;
         this.physics.world.colliders.destroy();
         this.cameras.main.stopFollow();
         this.player.anims.play('ded', true);
         
-        this.player.body.allowRotation = true
-        this.player.body.angularVelocity = 500
-        this.player.body.setVelocityX((Math.random() * 1000)-500)
-        this.player.body.setVelocityY(-200);  
+        this.player.body.allowRotation = true;
+        this.player.body.angularVelocity = 500;
+        this.player.body.setVelocityX((Math.random() * 1000) - 500);
+        this.player.body.setVelocityY(-200);
     
         this.player.setCollideWorldBounds(false);
 
         // Player respawn
         setTimeout(() => {
             this.cameras.main.startFollow(this.player);
-            this.player.alive = true
+            this.player.alive = true;
 
-            this.physics.add.collider(this.layers.map, this.player)
+            this.physics.add.collider(this.layers.map, this.player);
             this.physics.add.collider(this.player, this.traps.spikes, this.killPlayer, null, this);
 
             this.player.setCollideWorldBounds(true);
-            this.player.setVelocity(0,0)
-            this.player.body.angularVelocity = 0
-            this.player.setX(400)
-            this.player.setY(1420)
-            this.player.setRotation(0)
-            this.player.anims.play('idle',true)
-            this.player.body.allowRotation = false
+            this.player.setVelocity(0,0);
+            this.player.body.angularVelocity = 0;
+            this.player.setX(400);
+            this.player.setY(1420);
+            this.player.setRotation(0);
+            this.player.anims.play('idle', true);
+            this.player.body.allowRotation = false;
         }, 3000);
     }
 
