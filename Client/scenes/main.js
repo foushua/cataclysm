@@ -18,7 +18,11 @@ export default class Main extends Scene {
 
         this.debug = null;
 
-        this.effects = {}; // Effets des bonus
+        this.effects = {
+            fear: false,
+            speed: false,
+            slow: false
+        }; // Effets des bonus
     }
 
     
@@ -43,12 +47,7 @@ export default class Main extends Scene {
         this.layers.platform.setCollisionByExclusion([-1]); // The player will collide with this layer.
 
 
-        // BONUS
-        this.tiles.fishTiles = this.maps.addTilesetImage('fish');
-        this.layers.fishLayer = this.maps.createDynamicLayer('Fish', this.tiles.fishTiles, 0, 0);
-
-        this.layers.fishLayer.setTileIndexCallback(34, this.collectFish, this);
-        // this.physics.add.overlap(this.player, this.layers.fishLayer);
+        
 
 
 
@@ -62,7 +61,7 @@ export default class Main extends Scene {
      * @param {String} id
      * @param {Object} position
      */
-    createPlayer(id = null, position = { x: 400, y: 1420 }) {
+    createPlayer(id = null, position = { x: 324, y: 1336 }) {
         this.player = this.physics.add.sprite(position.x, position.y, 'player');
         this.player.setScale(1)
             .setSize(95,120)
@@ -82,6 +81,45 @@ export default class Main extends Scene {
 
         // Add player controls
         this.cursors = this.input.keyboard.createCursorKeys();
+
+        this.createBonuses();
+    }
+    
+    createBonuses(){
+        // poisson
+        this.tiles.fishTiles = this.maps.addTilesetImage('fish');
+        this.layers.fishLayer = this.maps.createDynamicLayer('Fish', this.tiles.fishTiles, 0, 0);
+    
+        this.layers.fishLayer.setTileIndexCallback(32, this.collectFish, this);
+        this.physics.add.overlap(this.player, this.layers.fishLayer);
+
+        //choco
+        this.tiles.chocoTiles = this.maps.addTilesetImage('choco');
+        this.layers.chocoLayer = this.maps.createDynamicLayer('Choco', this.tiles.chocoTiles, 0, 0);
+
+        this.layers.chocoLayer.setTileIndexCallback(33, this.collectChoco, this);
+        this.physics.add.overlap(this.player, this.layers.chocoLayer);
+
+        //Concombre
+        this.tiles.cucumTiles = this.maps.addTilesetImage('cucumber');
+        this.layers.cucumLayer = this.maps.createDynamicLayer('Cucumber', this.tiles.cucumTiles, 0, 0);
+
+        this.layers.cucumLayer.setTileIndexCallback(34, this.collectCucum, this);
+        this.physics.add.overlap(this.player, this.layers.cucumLayer);
+
+        //oiseau
+        this.tiles.birdTiles = this.maps.addTilesetImage('bird');
+        this.layers.birdLayer = this.maps.createDynamicLayer('Bird', this.tiles.birdTiles, 0, 0);
+
+        this.layers.birdLayer.setTileIndexCallback(35, this.collectBird, this);
+        this.physics.add.overlap(this.player, this.layers.birdLayer);
+
+        //Trampoline
+        this.tiles.trampTiles = this.maps.addTilesetImage('trampoline');
+        this.layers.trampLayer = this.maps.createDynamicLayer('Tramp', this.tiles.trampTiles, 0, 0);
+
+        this.layers.trampLayer.setTileIndexCallback(36, this.TrampoJump, this);
+        this.physics.add.overlap(this.player, this.layers.trampLayer);
     }
 
     /**
@@ -196,14 +234,55 @@ export default class Main extends Scene {
         }, 2000);
     }
 
+    // Bonuses functions
+    ////////////////////////////
     collectFish(sprite, tile){
+        console.log("fish")
         this.layers.fishLayer.removeTileAt(tile.x, tile.y);
         this.effects.speed = true;
         this.text.setText('poisson !!');
-        rocket.play()
-        setTimeout(function(){this.effects.speed=false, this.text.setText('')}, 2000)
+        // rocket.play()
+        setTimeout(() => {
+            this.effects.speed=false, this.text.setText('')}, 2000)
         return false;
     }
+
+    collectChoco(sprite, tile){
+        this.layers.chocoLayer.removeTileAt(tile.x, tile.y);
+        this.effects.slow = true;
+        this.text.setText('Beurk chocolat !!');
+        // vomit.play()
+        setTimeout(() => {
+            this.effects.slow=false, this.text.setText('')}, 2000)
+        return false;
+    }
+
+    collectCucum(sprite, tile){
+        let frightened
+        this.layers.cucumLayer.removeTileAt(tile.x, tile.y);
+        this.effects.fear = true;
+        if (this.effects.fear){
+            frightened = setInterval(() => {this.player.body.setVelocityY(-5000)}, 100)
+             // jump up
+        }
+        this.text.setText('Aaaaaaah un concombre !!');
+        // scream.play()
+        setTimeout(() => {
+            this.effects.fear=false, clearInterval(frightened), this.text.setText('')}, 1800)
+        return false;
+    }
+
+    collectBird(sprite, tile){
+        this.layers.birdLayer.removeTileAt(tile.x, tile.y);
+        this.effects.fly = true;
+        this.text.setText('Je voooole !!');
+        // flute.play()
+        setTimeout(() => {
+            this.effects.fly=false, flute.stop(), this.text.setText('')}, 3000)
+        return false;
+    }
+
+
 
     /**
      * These function is used to display all debug informations.
@@ -215,6 +294,10 @@ export default class Main extends Scene {
     }
 
     create() {
+        this.text = this.add.text(20, 570, '0', {
+            fontSize: '20px',
+            fill: '#ffffff'
+        }).setScrollFactor(0);
 
         this.createWorld();
         this.registerAudios();
@@ -238,10 +321,22 @@ export default class Main extends Scene {
     update(time, delta) {  
         if (process.env.NODE_ENV === 'development') this.debug.setText(this.debugging());
 
+        let moveSpeed
+
+        if (this.effects.fear){
+            moveSpeed = 0;
+        } else if (this.effects.speed) {
+            moveSpeed = 750;
+        } else if (this.effects.slow) {
+            moveSpeed = 150;
+        } else {
+            moveSpeed = 500;
+        }
+
         if (this.player.alive) {
             if (this.cursors.left.isDown)
             {
-                this.player.body.setVelocityX(-500); // move left
+                this.player.body.setVelocityX(-moveSpeed); // move left
                 this.player.flipX= true; // flip the sprite to the left
 
                 if (this.player.body.onFloor()){
@@ -250,7 +345,7 @@ export default class Main extends Scene {
             }
             else if (this.cursors.right.isDown)
             {
-                this.player.body.setVelocityX(500); // move right
+                this.player.body.setVelocityX(moveSpeed); // move right
                 this.player.flipX = false; // use the original sprite looking to the right
 
                 if (this.player.body.onFloor()){
