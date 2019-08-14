@@ -13,8 +13,11 @@ export default class Main extends Scene {
         this.player = null;
         this.cursors = null;
         this.traps = {};
+        this.text = null;
 
         this.debug = null;
+
+        this.effects = {}; // Effets des bonus
     }
 
     
@@ -23,15 +26,34 @@ export default class Main extends Scene {
      */
     createWorld() {
         this.maps = this.make.tilemap({ key: 'maps' });
-        this.tiles.map = this.maps.addTilesetImage('tiles');
-        this.layers.map = this.maps.createDynamicLayer('World', this.tiles.map, 0, 0);
+
+        // Tiles et calque d'origine
+        this.tiles.tiles = this.maps.addTilesetImage('tiles');
+        this.layers.tiles = this.maps.createDynamicLayer('World', this.tiles.tiles, 0, 0);
+        this.layers.tiles.setCollisionByExclusion([-1]); // The ;player will collide with this layer.
         
-         // The player will collide with this layer.
-        this.layers.map.setCollisionByExclusion([-1]);
+        // Tiles et calque de la mer
+        this.tiles.sea = this.maps.addTilesetImage('sea');
+        this.layers.sea = this.maps.createDynamicLayer('Sea', this.tiles.sea, 0, 0);
+        
+        // Tiles et calque plateformes
+        this.tiles.platform = this.maps.addTilesetImage('plateformes'); 
+        this.layers.platform = this.maps.createDynamicLayer('Plateformes', this.tiles.platform, 0, 0);
+        this.layers.platform.setCollisionByExclusion([-1]); // The player will collide with this layer.
+
+
+        // BONUS
+        this.tiles.fishTiles = this.maps.addTilesetImage('fish');
+        this.layers.fishLayer = this.maps.createDynamicLayer('Fish', this.tiles.fishTiles, 0, 0);
+
+        this.layers.fishLayer.setTileIndexCallback(34, this.collectFish, this);
+        // this.physics.add.overlap(this.player, this.layers.fishLayer);
+
+
 
         // Set the boundaries of our world.
-        this.physics.world.bounds.width = this.layers.map.width;
-        this.physics.world.bounds.height = this.layers.map.height;
+        this.physics.world.bounds.width = this.layers.tiles.width;
+        this.physics.world.bounds.height = this.layers.tiles.height;
     }
 
     /**
@@ -54,7 +76,8 @@ export default class Main extends Scene {
         this.player.alive = true;
 
         // The player collide with layers.
-        this.physics.add.collider(this.layers.map, this.player);
+        this.physics.add.collider(this.layers.tiles, this.player);
+        this.physics.add.collider(this.layers.platform, this.player);
 
         // Add player controls
         this.cursors = this.input.keyboard.createCursorKeys();
@@ -141,7 +164,7 @@ export default class Main extends Scene {
             this.cameras.main.startFollow(this.player);
             this.player.alive = true;
 
-            this.physics.add.collider(this.layers.map, this.player);
+            this.physics.add.collider(this.layers.tiles, this.player);
             this.physics.add.collider(this.player, this.traps.spikes, this.killPlayer, null, this);
 
             this.player.setCollideWorldBounds(true);
@@ -153,6 +176,15 @@ export default class Main extends Scene {
             this.player.anims.play('idle', true);
             this.player.body.allowRotation = false;
         }, 2000);
+    }
+
+    collectFish(sprite, tile){
+        this.layers.fishLayer.removeTileAt(tile.x, tile.y);
+        this.effects.speed = true;
+        this.text.setText('poisson !!');
+        rocket.play()
+        setTimeout(function(){this.effects.speed=false, this.text.setText('')}, 2000)
+        return false;
     }
 
     /**
@@ -171,7 +203,7 @@ export default class Main extends Scene {
 
         this.manageCamera();
         this.registerAnimations();
-        this.manageSpikes();
+        // this.manageSpikes();
 
         if (process.env.NODE_ENV === 'development') {
             this.debug = this.add.text(20, 20, this.debugging(), {

@@ -16,9 +16,19 @@ export default class Loading extends Scene {
         
         // Load spritesheet assets..
         this.load.spritesheet('tiles', 'images/tiles.png', { frameWidth: 70, frameHeight: 70});
+        this.load.spritesheet('plateformes', 'images/plateformes.png', {frameWidth: 70, frameHeight: 70});
+        this.load.spritesheet('sea', 'images/sea.png', { frameWidth: 70, frameHeight: 70});
         
         // Load images assets
-        this.load.image('spikeTrap', 'images/spikesTrap.png');
+        this.load.image('coin', 'assets/coinGold.png');
+        this.load.image('fish', 'assets/fish.png');
+        this.load.image('choco', 'assets/choco.png');
+        this.load.image('cucumber', 'assets/cucumber.png');
+        this.load.image('bird', 'assets/bird.png')
+        this.load.image('trampoline', 'assets/trampoline.png')
+        this.load.image('spikeTrap', 'assets/spikeTrap.png');
+        this.load.image('moving', 'assets/moving.png');
+    
 
         // Load atlas assets
         this.load.atlas('player', 'images/cat.png', 'cat.json');
