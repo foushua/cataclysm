@@ -41,9 +41,9 @@ export default class Main extends Scene {
      */
     createPlayer(id = null, position = { x: 400, y: 1420 }) {
         this.player = this.physics.add.sprite(position.x, position.y, 'player');
-        this.player.setScale(.3)
-            .setSize(330,275)
-            .setOffset(40,45)
+        this.player.setScale(1)
+            .setSize(95,120)
+            .setOffset(35,10)
             .setBounce(0) // our player will bounce from items
             .setCollideWorldBounds(true); // don't go out of the map
 
@@ -77,14 +77,19 @@ export default class Main extends Scene {
      */
     registerAnimations() {
         this.anims.create({
-            key: 'walk', frameRate: 120, repeat: -1,
-            frames: this.anims.generateFrameNames('player', { prefix: 'Run_', start: 1, end: 24, zeroPad: 3 })
+            key: 'walk', frameRate: 60, repeat: -1,
+            frames: this.anims.generateFrameNames('player', { prefix: 'Run_', start: 1, end: 30, zeroPad: 3 })
         });
     
         this.anims.create({
-            key: 'idle', frameRate: 10,
-            frames: [{ key: 'player', frame: 'Idle' }]
+            key: 'idle', frameRate: 60, repeat: -1,
+            frames: this.anims.generateFrameNames('player', { prefix: 'Idle_', start:1, end: 36, zeroPad:3 })
         });
+
+        this.anims.create({
+            key: 'jump', frameRate: 60, repeat: -1,
+            frames: this.anims.generateFrameNames('player', { prefix: 'Jump_', start: 1, end: 36, zeroPad: 3})
+        })
         
         this.anims.create({
             key: 'ded', frameRate: 10,
@@ -185,23 +190,37 @@ export default class Main extends Scene {
             if (this.cursors.left.isDown)
             {
                 this.player.body.setVelocityX(-500); // move left
-                this.player.anims.play('walk', true); // play walk animation
                 this.player.flipX= true; // flip the sprite to the left
+
+                if (this.player.body.onFloor()){
+                    this.player.anims.play('walk', true); // play walk animation
+                }
             }
             else if (this.cursors.right.isDown)
             {
                 this.player.body.setVelocityX(500); // move right
-                this.player.anims.play('walk', true); // play walk animatio
                 this.player.flipX = false; // use the original sprite looking to the right
+
+                if (this.player.body.onFloor()){
+                    this.player.anims.play('walk', true); // play walk animatio
+                }
             } else {
                 this.player.body.setVelocityX(0);
-                this.player.anims.play('idle', true);
+
+                if (this.player.body.onFloor()){
+                    this.player.anims.play('idle', true);
+                }
             }  
             // jump 
             if (this.cursors.up.isDown && this.player.body.onFloor())
             {
-                this.player.body.setVelocityY(-800);        
+                this.player.body.setVelocityY(-800); 
             }
+
+            if (!this.player.body.onFloor()){
+
+                this.player.anims.play('jump', true);
+            }       
         }
     }
 
