@@ -104,7 +104,8 @@ export default class Main extends Scene {
         let spikeObjects = this.maps.getObjectLayer('Traps')['objects'];
         spikeObjects.forEach(spikeObject => {
             // Add new spikes to our sprite group, change the start y position to meet the platform
-            this.traps.spikes.create(spikeObject.x, spikeObject.y - spikeObject.height, 'spikeTrap').setOrigin(0, 0);
+            const spike = this.traps.spikes.create(spikeObject.x, spikeObject.y - spikeObject.height, 'spikeTrap').setOrigin(0, 0);
+            spike.setAlpha(0);
         });
         this.physics.add.collider(this.player, this.traps.spikes, this.killPlayer, null, this);
     }
@@ -125,6 +126,11 @@ export default class Main extends Scene {
     
         this.player.setCollideWorldBounds(false);
 
+        tile.setAlpha(1);
+        setTimeout(() => {
+            tile.setAlpha(0)
+        }, 5000)
+
         // Player respawn
         setTimeout(() => {
             this.cameras.main.startFollow(this.player);
@@ -141,7 +147,7 @@ export default class Main extends Scene {
             this.player.setRotation(0);
             this.player.anims.play('idle', true);
             this.player.body.allowRotation = false;
-        }, 3000);
+        }, 2000);
     }
 
     /**
