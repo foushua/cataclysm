@@ -97,11 +97,11 @@ export default class Main extends Scene {
         this.physics.add.overlap(this.player, this.layers.birdLayer);
 
         // Trampoline
-        this.tiles.trampTiles = this.maps.addTilesetImage('trampoline');
-        this.layers.trampLayer = this.maps.createDynamicLayer('Tramp', this.tiles.trampTiles, 0, 0);
+        // this.tiles.trampTiles = this.maps.addTilesetImage('trampoline');
+        // this.layers.trampLayer = this.maps.createDynamicLayer('Tramp', this.tiles.trampTiles, 0, 0);
 
-        this.layers.trampLayer.setTileIndexCallback(36, this.TrampoJump, this);
-        this.physics.add.overlap(this.player, this.layers.trampLayer);
+        // this.layers.trampLayer.setTileIndexCallback(36, this.TrampoJump, this);
+        // this.physics.add.overlap(this.player, this.layers.trampLayer);
     }
 
     /**
