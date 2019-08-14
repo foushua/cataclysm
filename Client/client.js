@@ -2,7 +2,7 @@ import '@babel/polyfill';
 import Phaser from 'phaser';
 
 // Loading all scenes..
-import { Loading, Main } from './scenes';
+import { Loading, Main, Menu } from './scenes';
 
 class Game extends Phaser.Game {
 
@@ -11,7 +11,7 @@ class Game extends Phaser.Game {
             title: "Cataclysm",
             type: Phaser.AUTO,
             width: window.innerWidth * Math.round(window.devicePixelRatio), height: window.innerHeight * Math.round(window.devicePixelRatio),
-            scene: [Loading, Main],
+            scene: [Menu, Loading, Main],
             disableContextMenu: true,
             enableDebug: process.env.NODE_ENV === 'development',
             input: { keyboard: true, mouse: true, touch: false, gamepad: false },
