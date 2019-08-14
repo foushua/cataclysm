@@ -13,6 +13,7 @@ export default class Main extends Scene {
         this.player = null;
         this.cursors = null;
         this.traps = {};
+        this.audios = { music: {}, effect: {} };
 
         this.debug = null;
     }
@@ -70,6 +71,23 @@ export default class Main extends Scene {
         this.cameras.main.startFollow(this.player);
         // set background color, so the sky is not black    
         this.cameras.main.setBackgroundColor('#ccccff'); 
+    }
+
+    /**
+     * This function is used to register all audios.
+     */
+    registerAudios() {
+        this.audios.effect.jump = this.sound.add('effect:jump', { volume: .5 });
+        this.audios.effect.meow = this.sound.add('effect:meow', { volume: .2 });
+        this.audios.effect.knife = this.sound.add('effect:knife', { volume: 1 });
+        this.audios.effect.catDeath = this.sound.add('effect:death', { volume: .9 });
+        this.audios.effect.rocket = this.sound.add('effect:rocket', { volume: 1 });
+        this.audios.effect.scream = this.sound.add('effect:scream', { volume: .4 });
+        this.audios.effect.vomit  = this.sound.add('effect:vomit', { volume: 1 });
+        this.audios.effect.flute  = this.sound.add('effect:flute', { volume: .2 });
+        this.audios.effect.twang  = this.sound.add('effect:twang', { volume: 1 });
+
+        this.audios.music.default = this.sound.add('music:default', { volume: .2 });
     }
 
     /**
@@ -167,9 +185,11 @@ export default class Main extends Scene {
     create() {
 
         this.createWorld();
-        this.createPlayer();
+        this.registerAudios();
 
+        this.createPlayer();
         this.manageCamera();
+
         this.registerAnimations();
         this.manageSpikes();
 
@@ -206,12 +226,11 @@ export default class Main extends Scene {
                 }
             } else {
                 this.player.body.setVelocityX(0);
-
                 if (this.player.body.onFloor()){
                     this.player.anims.play('idle', true);
                 }
             }  
-            // jump 
+            
             if (this.cursors.up.isDown && this.player.body.onFloor())
             {
                 this.player.body.setVelocityY(-800); 
@@ -220,7 +239,8 @@ export default class Main extends Scene {
             if (!this.player.body.onFloor()){
 
                 this.player.anims.play('jump', true);
-            }       
+            }
+
         }
     }
 

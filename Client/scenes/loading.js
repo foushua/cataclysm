@@ -9,7 +9,16 @@ export default class Loading extends Scene {
     preload() {
 
         // Load audio assets..
-        this.load.audio('music:main', 'audios/musics/main.mp3');
+        this.load.audio('music:default', 'audios/musics/default.mp3');
+        this.load.audio('effect:jump', 'audios/effects/jump.mp3');
+        this.load.audio('effect:meow',  'audios/effects/meow.mp3');
+        this.load.audio('effect:knife', 'audios/effects/knife.mp3');
+        this.load.audio('effect:death', 'audios/effects/death.mp3');
+        this.load.audio('effect:rocket', 'audios/effects/rocket.mp3');
+        this.load.audio('effect:scream', 'audios/effects/fear.mp3');
+        this.load.audio('effect:vomit', 'audios/effects/vomit.mp3');
+        this.load.audio('effect:flute', 'audios/effects/flute.mp3');
+        this.load.audio('effect:twang', 'audios/effects/twang.mp3');
 
         // Load tilemap assets..
         this.load.tilemapTiledJSON('maps', 'map.json');
