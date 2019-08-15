@@ -1,4 +1,5 @@
 import { Scene } from 'phaser';
+import Server from 'socket.io-client';
 
 export default class Main extends Scene {
 
@@ -17,6 +18,9 @@ export default class Main extends Scene {
         this.audios = { music: {}, effect: {} };
         this.effects = { fear: false, speed: false, slow: false };
         this.cursors = this.input.keyboard.createCursorKeys();
+        
+        this.server = Server(process.env.NODE_ENV === 'production' ? `${process.env.SERVER_URL}:${process.env.SERVER_PORT}` : `${location.hostname}:9208`);
+        this.players = [];
     }
     
     /**
@@ -62,6 +66,30 @@ export default class Main extends Scene {
         // The player collide with layers
         this.physics.add.collider(this.layers.tiles, this.player);
         this.physics.add.collider(this.layers.platform, this.player);
+    }
+
+    /**
+     * This function is used to create network player.
+     * @param {String} id
+     * @param {Object} position
+     */
+    createNetworkPlayer(id, position = { x: 324, y: 1336 }) {
+        this.players[id] = this.physics.add.sprite(position.x, position.y, 'player');
+        this.players[id].setScale(1)
+            .setSize(95,120)
+            .setOffset(35,10)
+            .setBounce(0) // our player will bounce from items
+            .setCollideWorldBounds(true); // don't go out of the map
+
+        // Set the player id
+        this.players[id].id = id;
+
+        // Set the player alive
+        this.players[id].alive = true;
+
+        // The player collide with layers
+        this.physics.add.collider(this.layers.tiles, this.players[id]);
+        this.physics.add.collider(this.layers.platform, this.players[id]);
     }
     
     /**
@@ -295,6 +323,7 @@ export default class Main extends Scene {
     debugging() {
         return `Debugging Cataclysm (Phaser ${Phaser.VERSION})
         \nFramerate: ${Math.floor(this.game.loop.actualFps)}
+        \nNetwork: ${this.server.connected ? `Connected` : `Disconnected`}
         \nCoordinates: X:${Math.floor(this.player.x)} Y:${Math.floor(this.player.y)}`;
     }
 
@@ -302,15 +331,45 @@ export default class Main extends Scene {
      * This function is native to Phaser.io, is used to create the scene.
      */
     create() {
+
+        this.server.on('connect', () => {
+            console.log('We are ready to work harder! 💪😎');
+
+            // Request all connected users
+            this.server.on('player:all', (players) => {
+                players.forEach((player) => {
+                    if (this.server.id != player) {
+                        this.createNetworkPlayer(player);
+                    }
+                });
+            });
+
+            // Handle player spawning
+            this.server.on('player:spawn', id => {
+                if (id != this.server.id) this.createNetworkPlayer(id);
+                this.server.emit('player:spawned', id);
+                
+                console.log(`${id} was connected 😁`, this.players);
+            });
+
+            // Handle player unspawn
+            this.server.on('player:unspawn', id => {
+                this.players[id].destroy();
+                this.server.emit('player:unspawned');
+                delete this.players[id];
+
+                console.log(`${id} was disconnected 😞`, this.players);
+            });
+
+        });
         
         this.createWorld();
         this.registerAudios();
 
         this.createPlayer();
-        this.createBonus();
         this.manageCamera();
-
         this.registerAnimations();
+        this.createBonus();
         // this.manageSpikes(); // Broken
 
         // Create message displayed to screen
