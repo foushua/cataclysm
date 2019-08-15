@@ -16,7 +16,13 @@ class Game extends Phaser.Game {
             disableContextMenu: true,
             enableDebug: process.env.NODE_ENV === 'development',
             input: { keyboard: true, mouse: true, touch: false, gamepad: false },
-            physics: { default: 'arcade', arcade: { debug: process.env.NODE_ENV === 'development', gravity: { y: 1200 } }},
+            physics: { 
+                default: 'arcade', 
+                arcade: { 
+                    debug: process.env.NODE_ENV === 'development', 
+                    gravity: { y: 1200 } ,
+                    tileBias: 32 // This fixes the tiles collision issue on high speed.
+                }},
             scale: {
                 mode: Phaser.Scale.WIDTH_CONTROLS_HEIGHT ,
                 autoCenter: Phaser.Scale.CENTER_BOTH

@@ -21,6 +21,7 @@ export default class Main extends Scene {
         
         this.server = Server(process.env.NODE_ENV === 'production' ? `${process.env.SERVER_URL}:${process.env.SERVER_PORT}` : `${location.hostname}:9208`);
         this.players = [];
+        this.spawnCoords = { x: 160, y: 1540 }
     }
     
     /**
@@ -52,7 +53,7 @@ export default class Main extends Scene {
      * This function is used to create the player.
      * @param {Object} position
      */
-    createPlayer(position = { x: 324, y: 1336 }) {
+    createPlayer(position = this.spawnCoords) {
         this.player = this.physics.add.sprite(position.x, position.y, 'player');
         this.player.setScale(1)
             .setSize(95,120)
@@ -125,11 +126,11 @@ export default class Main extends Scene {
         this.physics.add.overlap(this.player, this.layers.birdLayer);
 
         // Trampoline
-        // this.tiles.trampTiles = this.maps.addTilesetImage('trampoline');
-        // this.layers.trampLayer = this.maps.createDynamicLayer('Tramp', this.tiles.trampTiles, 0, 0);
+        this.tiles.trampTiles = this.maps.addTilesetImage('trampoline');
+        this.layers.trampLayer = this.maps.createDynamicLayer('Tramp', this.tiles.trampTiles, 0, 0);
 
-        // this.layers.trampLayer.setTileIndexCallback(36, this.TrampoJump, this);
-        // this.physics.add.overlap(this.player, this.layers.trampLayer);
+        this.layers.trampLayer.setTileIndexCallback(36, this.TrampoJump, this);
+        this.physics.add.overlap(this.player, this.layers.trampLayer);
     }
 
     /**
@@ -229,7 +230,7 @@ export default class Main extends Scene {
         }, 5000)
 
         // Player respawn
-        setTimeout(() => {
+        setTimeout((position = this.spawnCoords) => {
             this.cameras.main.startFollow(this.player);
             this.player.alive = true;
 
@@ -239,8 +240,8 @@ export default class Main extends Scene {
             this.player.setCollideWorldBounds(true);
             this.player.setVelocity(0,0);
             this.player.body.angularVelocity = 0;
-            this.player.setX(400);
-            this.player.setY(1420);
+            this.player.setX(position.x);
+            this.player.setY(position.y);
             this.player.setRotation(0);
             this.player.anims.play('idle', true);
             this.player.body.allowRotation = false;
@@ -315,6 +316,11 @@ export default class Main extends Scene {
             this.audios.effect.flute.stop();
             this.message.setText('');
         }, 3000);
+    }
+
+    TrampoJump(sprite, tile){
+        this.player.body.setVelocityY(-1000);  
+        this.audios.effect.twang.play()
     }
 
     /**
