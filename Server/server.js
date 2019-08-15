@@ -11,6 +11,10 @@ Server.on('connect', (Socket) => {
 	Server.emit('player:spawn', Socket.id);
 	Socket.emit('player:all', players);
 
+	Socket.on('player:move', (id, data) => {
+		Server.emit('player:moved', id, data.position, data.flip);
+	});
+
 	Socket.on('disconnect', () => {
 		Server.emit('player:unspawn', Socket.id);
 		_.remove(players, (player) => {

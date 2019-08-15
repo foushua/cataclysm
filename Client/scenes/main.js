@@ -18,10 +18,10 @@ export default class Main extends Scene {
         this.audios = { music: {}, effect: {} };
         this.effects = { fear: false, speed: false, slow: false };
         this.cursors = this.input.keyboard.createCursorKeys();
-        
-        this.server = Server(process.env.NODE_ENV === 'production' ? `${process.env.SERVER_URL}:${process.env.SERVER_PORT}` : `${location.hostname}:9208`);
-        this.players = [];
         this.spawnCoords = { x: 160, y: 1540 }
+
+        this.server = Server(process.env.NODE_ENV === 'production' ? `${process.env.SERVER_URL}:${process.env.SERVER_PORT}` : `${location.hostname}:9208`);
+        this.players = {};
     }
     
     /**
@@ -74,9 +74,13 @@ export default class Main extends Scene {
      * @param {String} id
      * @param {Object} position
      */
-    createNetworkPlayer(id, position = { x: 324, y: 1336 }) {
-        this.players[id] = this.physics.add.sprite(position.x, position.y, 'player');
-        this.players[id].setScale(1)
+    createNetworkPlayer(id, position = this.spawnCoords) {
+        
+        this.players = { ...this.players, [id]: {
+            id, sprite: this.physics.add.sprite(position.x, position.y, 'player')
+        }};
+
+        this.players[id].sprite.setScale(1)
             .setSize(95,120)
             .setOffset(35,10)
             .setBounce(0) // our player will bounce from items
@@ -89,8 +93,8 @@ export default class Main extends Scene {
         this.players[id].alive = true;
 
         // The player collide with layers
-        this.physics.add.collider(this.layers.tiles, this.players[id]);
-        this.physics.add.collider(this.layers.platform, this.players[id]);
+        this.physics.add.collider(this.layers.tiles, this.players[id].sprite);
+        this.physics.add.collider(this.layers.platform, this.players[id].sprite);
     }
     
     /**
@@ -372,9 +376,19 @@ export default class Main extends Scene {
                 console.log(`${id} was connected 😁`, this.players);
             });
 
+            // Handle player moving
+            this.server.on('player:moved', (id, position, flip) =>  {
+                if (id != this.server.id) {
+                    this.players[id].sprite.setX(position.x),
+                    this.players[id].sprite.setY(position.y);
+                    this.players[id].sprite.setFlipX(flip.x);
+                    this.players[id].sprite.setFlipY(flip.y);
+                }
+            });
+
             // Handle player unspawn
             this.server.on('player:unspawn', id => {
-                this.players[id].destroy();
+                this.players[id].sprite.destroy();
                 this.server.emit('player:unspawned');
                 delete this.players[id];
 
@@ -427,6 +441,15 @@ export default class Main extends Scene {
         }
 
         if (this.player.alive) {
+
+            // If "this.players" is not empty, send the player position to all connected players
+            if (Object.keys(this.players).length != 0) {
+                this.server.emit('player:move', this.server.id, {
+                    position: { x: this.player.x, y: this.player.y },
+                    flip: { x: this.player.flipX, y: this.player.flipY }
+                });
+            }
+
             if (this.cursors.left.isDown) {
                 this.player.body.setVelocityX(-moveSpeed); // move left
                 this.player.flipX = true; // flip the sprite to the left
@@ -456,7 +479,7 @@ export default class Main extends Scene {
             }
 
             if (this.effects.fear){
-                this.player.anims.play('fear', true)
+                this.player.anims.play('fear', true);
             }
 
             if (this.cursors.space.isDown) {
