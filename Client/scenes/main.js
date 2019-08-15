@@ -386,6 +386,13 @@ export default class Main extends Scene {
                 }
             });
 
+            // Handle player animation
+            this.server.on('player:animated', (id, animation, state = true) => {
+                if (id != this.server.id) {
+                    this.players[id].sprite.anims.play(animation, state);
+                }
+            });
+
             // Handle player unspawn
             this.server.on('player:unspawn', id => {
                 this.players[id].sprite.destroy();
@@ -455,17 +462,20 @@ export default class Main extends Scene {
                 this.player.flipX = true; // flip the sprite to the left
                 if (this.player.body.onFloor()) {
                     this.player.anims.play('walk', true); // play walk animation
+                    this.server.emit('player:animate', 'walk', true);
                 }
             } else if (this.cursors.right.isDown) {
                 this.player.body.setVelocityX(moveSpeed); // move right
                 this.player.flipX = false; // use the original sprite looking to the right
                 if (this.player.body.onFloor()) {
                     this.player.anims.play('walk', true); // play walk animation
+                    this.server.emit('player:animate', 'walk', true);
                 }
             } else {
                 this.player.body.setVelocityX(0);
                 if (this.player.body.onFloor() && !this.effects.fear) {
                     this.player.anims.play('idle', true); // play idle animation
+                    this.server.emit('player:animate', 'idle', true);
                 }
             }  
             
@@ -476,10 +486,12 @@ export default class Main extends Scene {
 
             if (!this.player.body.onFloor() && !this.effects.fear) {
                 this.player.anims.play('jump', true); // play jump animation
+                this.server.emit('player:animate', 'jump', true);
             }
 
             if (this.effects.fear){
                 this.player.anims.play('fear', true);
+                this.server.emit('player:animate', 'fear', true);
             }
 
             if (this.cursors.space.isDown) {
