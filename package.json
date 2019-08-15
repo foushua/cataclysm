@@ -10,10 +10,10 @@
   "scripts": {
     "dev": "cross-env NODE_ENV=development npm-run-all --parallel client:serve server:serve",
     "build": "npm run client:build",
-    "start": "node server/server.js",
+    "start": "node Server/server.js",
     "client:build": "parcel build --no-content-hash index.html --out-dir Build",
     "client:serve": "parcel serve index.html --out-dir Build",
-    "server:serve": "nodemon server/server.js"
+    "server:serve": "nodemon Server/server.js"
   },
   "staticFiles": {
     "staticPath": [
