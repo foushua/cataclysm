@@ -180,6 +180,11 @@ export default class Main extends Scene {
             key: 'jump', frameRate: 60, repeat: -1,
             frames: this.anims.generateFrameNames('player', { prefix: 'Jump_', start: 1, end: 36, zeroPad: 3})
         });
+
+        this.anims.create({
+            key: 'fear', frameRate: 60, repeat: -1,
+            frames: this.anims.generateFrameNames('player', { prefix: 'Fear_', start:1, end: 5, zeroPad:3 })
+        })
         
         this.anims.create({
             key: 'ded', frameRate: 10,
@@ -196,7 +201,7 @@ export default class Main extends Scene {
             immovable: true
         });
 
-        let spikeObjects = this.maps.getObjectLayer('Traps')['objects'];
+        let spikeObjects = this.maps.getObjectLayer('Spikes')['objects'];
         spikeObjects.forEach(spikeObject => {
             // Add new spikes to our sprite group, change the start y position to meet the platform
             const spike = this.traps.spikes.create(spikeObject.x, spikeObject.y - spikeObject.height, 'spikeTrap').setOrigin(0, 0);
@@ -234,9 +239,12 @@ export default class Main extends Scene {
             this.cameras.main.startFollow(this.player);
             this.player.alive = true;
 
+            // Recreation of world collisions
             this.physics.add.collider(this.layers.tiles, this.player);
+            this.physics.add.collider(this.layers.platform, this.player);
             this.physics.add.collider(this.player, this.traps.spikes, this.killPlayer, null, this);
 
+            // Reset player state
             this.player.setCollideWorldBounds(true);
             this.player.setVelocity(0,0);
             this.player.body.angularVelocity = 0;
@@ -245,6 +253,13 @@ export default class Main extends Scene {
             this.player.setRotation(0);
             this.player.anims.play('idle', true);
             this.player.body.allowRotation = false;
+
+            // Recreation of bonuses detections
+            this.physics.add.overlap(this.player, this.layers.fishLayer);
+            this.physics.add.overlap(this.player, this.layers.chocoLayer);
+            this.physics.add.overlap(this.player, this.layers.cucumLayer);
+            this.physics.add.overlap(this.player, this.layers.birdLayer);
+            this.physics.add.overlap(this.player, this.layers.trampLayer);
         }, 2000);
     }
 
@@ -289,9 +304,8 @@ export default class Main extends Scene {
         let frightened;
         this.layers.cucumLayer.removeTileAt(tile.x, tile.y);
         this.effects.fear = true;
-        if (this.effects.fear) {
-            frightened = setInterval(() => { this.player.body.setVelocityY(-5000) }, 100);
-        }
+        this.player.body.setVelocityX((Math.random() * 1000) - 500);
+        this.player.body.setVelocityY(-500);
         this.message.setText('Aaaaaaah un concombre !!');
         this.audios.effect.scream.play();
         setTimeout(() => {
@@ -376,7 +390,7 @@ export default class Main extends Scene {
         this.manageCamera();
         this.registerAnimations();
         this.createBonus();
-        // this.manageSpikes(); // Broken
+        this.manageSpikes();
 
         // Create message displayed to screen
         this.message = this.add.text(20, 570, null, {
@@ -427,7 +441,7 @@ export default class Main extends Scene {
                 }
             } else {
                 this.player.body.setVelocityX(0);
-                if (this.player.body.onFloor()) {
+                if (this.player.body.onFloor() && !this.effects.fear) {
                     this.player.anims.play('idle', true); // play idle animation
                 }
             }  
@@ -437,8 +451,12 @@ export default class Main extends Scene {
                 this.player.body.setVelocityY(-800); // Jump
             }
 
-            if (!this.player.body.onFloor()) {
+            if (!this.player.body.onFloor() && !this.effects.fear) {
                 this.player.anims.play('jump', true); // play jump animation
+            }
+
+            if (this.effects.fear){
+                this.player.anims.play('fear', true)
             }
 
             if (this.cursors.space.isDown) {

@@ -58,7 +58,43 @@
          "draworder":"topdown",
          "id":12,
          "name":"Spikes",
-         "objects":[],
+         "objects":[
+                {
+                 "gid":38,
+                 "height":21,
+                 "id":31,
+                 "name":"",
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":70,
+                 "x":1259.66666666667,
+                 "y":1398
+                }, 
+                {
+                 "gid":38,
+                 "height":21,
+                 "id":32,
+                 "name":"",
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":70,
+                 "x":1474.33333333333,
+                 "y":1398
+                }, 
+                {
+                 "gid":38,
+                 "height":21,
+                 "id":33,
+                 "name":"",
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":70,
+                 "x":1819.66666666667,
+                 "y":1399.33333333333
+                }],
          "opacity":1,
          "type":"objectgroup",
          "visible":true,
@@ -144,7 +180,7 @@
          "y":0
         }],
  "nextlayerid":23,
- "nextobjectid":31,
+ "nextobjectid":34,
  "orientation":"orthogonal",
  "renderorder":"right-down",
  "tiledversion":"1.2.4",
@@ -282,19 +318,6 @@
          "tilewidth":70
         }, 
         {
-         "columns":1,
-         "firstgid":17,
-         "image":"images\/spikesTrap.png",
-         "imageheight":21,
-         "imagewidth":70,
-         "margin":0,
-         "name":"spikeTrap",
-         "spacing":0,
-         "tilecount":0,
-         "tileheight":70,
-         "tilewidth":70
-        }, 
-        {
          "columns":3,
          "firstgid":17,
          "image":"images\/plateformes.png",
@@ -396,6 +419,19 @@
          "spacing":0,
          "tilecount":1,
          "tileheight":70,
+         "tilewidth":70
+        }, 
+        {
+         "columns":1,
+         "firstgid":38,
+         "image":"images\/spikesTrap.png",
+         "imageheight":21,
+         "imagewidth":70,
+         "margin":0,
+         "name":"spikeTrap",
+         "spacing":0,
+         "tilecount":1,
+         "tileheight":21,
          "tilewidth":70
         }],
  "tilewidth":70,

@@ -27,6 +27,7 @@ export default class Loading extends Scene {
         this.load.spritesheet('tiles', 'images/tiles.png', { frameWidth: 70, frameHeight: 70});
         this.load.spritesheet('plateformes', 'images/plateformes.png', {frameWidth: 70, frameHeight: 70});
         this.load.spritesheet('sea', 'images/sea.png', { frameWidth: 70, frameHeight: 70});
+        this.load.spritesheet('spikeTrap', 'images/spikesTrap.png', { frameWidth: 70, frameHeight: 70});
         
         // Load images assets
         this.load.image('coin', 'images/coinGold.png');
