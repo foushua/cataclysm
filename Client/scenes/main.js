@@ -20,7 +20,7 @@ export default class Main extends Scene {
         this.cursors = this.input.keyboard.createCursorKeys();
         this.spawnCoords = { x: 160, y: 1540 }
 
-        this.server = Server(process.env.NODE_ENV === 'production' ? `${process.env.SERVER_URL}:${process.env.SERVER_PORT}` : `${location.hostname}:9208`);
+        this.server = Server(`${location.hostname}:9208`);
         this.players = {};
     }
     
