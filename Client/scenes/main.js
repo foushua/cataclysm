@@ -107,35 +107,35 @@ export default class Main extends Scene {
         this.tiles.fishTiles = this.maps.addTilesetImage('fish');
         this.layers.fishLayer = this.maps.createDynamicLayer('Fish', this.tiles.fishTiles, 0, 0);
     
-        this.layers.fishLayer.setTileIndexCallback(32, this.collectFish, this);
+        this.layers.fishLayer.setTileIndexCallback(27, this.collectFish, this);
         this.physics.add.overlap(this.player, this.layers.fishLayer);
 
         // Chocolate
         this.tiles.chocoTiles = this.maps.addTilesetImage('choco');
         this.layers.chocoLayer = this.maps.createDynamicLayer('Choco', this.tiles.chocoTiles, 0, 0);
 
-        this.layers.chocoLayer.setTileIndexCallback(33, this.collectChoco, this);
+        this.layers.chocoLayer.setTileIndexCallback(28, this.collectChoco, this);
         this.physics.add.overlap(this.player, this.layers.chocoLayer);
 
         // Cucumber
         this.tiles.cucumTiles = this.maps.addTilesetImage('cucumber');
         this.layers.cucumLayer = this.maps.createDynamicLayer('Cucumber', this.tiles.cucumTiles, 0, 0);
 
-        this.layers.cucumLayer.setTileIndexCallback(34, this.collectCucum, this);
+        this.layers.cucumLayer.setTileIndexCallback(29, this.collectCucum, this);
         this.physics.add.overlap(this.player, this.layers.cucumLayer);
 
         // Bird
         this.tiles.birdTiles = this.maps.addTilesetImage('bird');
         this.layers.birdLayer = this.maps.createDynamicLayer('Bird', this.tiles.birdTiles, 0, 0);
 
-        this.layers.birdLayer.setTileIndexCallback(35, this.collectBird, this);
+        this.layers.birdLayer.setTileIndexCallback(30, this.collectBird, this);
         this.physics.add.overlap(this.player, this.layers.birdLayer);
 
         // Trampoline
         this.tiles.trampTiles = this.maps.addTilesetImage('trampoline');
         this.layers.trampLayer = this.maps.createDynamicLayer('Tramp', this.tiles.trampTiles, 0, 0);
 
-        this.layers.trampLayer.setTileIndexCallback(36, this.TrampoJump, this);
+        this.layers.trampLayer.setTileIndexCallback(38, this.TrampoJump, this);
         this.physics.add.overlap(this.player, this.layers.trampLayer);
     }
 
