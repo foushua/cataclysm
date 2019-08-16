@@ -19,6 +19,10 @@ Server.on('connect', (Socket) => {
 		Server.emit('player:animated', Socket.id, animation, state);
 	});
 
+	Socket.on('player:meow', () => {
+		Server.emit('player:meow', Socket.id);
+	});
+
 	Socket.on('disconnect', () => {
 		Server.emit('player:unspawn', Socket.id);
 		_.remove(players, (player) => {

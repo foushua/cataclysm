@@ -262,7 +262,6 @@ export default class Main extends Scene {
         this.effects.onPlatform = true;
     }
 
-
     /**
      * This function is used to manage the death of a player
      */
@@ -441,6 +440,11 @@ export default class Main extends Scene {
                 }
             });
 
+            // Handle the meow of player
+            this.server.on('player:meow', id => {
+                this.audios.effect.meow.play();
+            });
+
             // Handle player unspawn
             this.server.on('player:unspawn', id => {
                 this.players[id].sprite.destroy();
@@ -547,7 +551,8 @@ export default class Main extends Scene {
             }
 
             if (this.cursors.space.isDown) {
-                this.audios.effect.meow.play();
+                this.server.emit('player:meow');
+                
             }
 
             if (this.effects.onPlatform && this.player.body.velocity.x === 0){
