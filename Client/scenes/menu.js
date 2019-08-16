@@ -9,6 +9,11 @@ export default class Menu extends Scene {
         this.playButton = null;
     }
 
+    preload(){
+        this.load.image('title', 'images/title.png');
+        this.load.image('titleCat', 'images/titleCat.png')
+    }
+
     getCenterX(){
         return ( this.sys.canvas.width ) * 0.5
     }﻿
@@ -31,8 +36,10 @@ export default class Menu extends Scene {
     }
 
     create(){
-        this.playButton = this.add.text(this.getCenterX(), this.getCenterY()+100, 'Play', {   
-            fill: '#fff',
+        this.add.image(this.getCenterX(), 300, 'title')
+        this.cameras.main.setBackgroundColor('#ccccff'); 
+        this.playButton = this.add.text(this.getCenterX()-50, this.getCenterY()*1.5, 'Play', {   
+            fill: '#000',
             font: "70px Arial",
             align: "center"
         })
