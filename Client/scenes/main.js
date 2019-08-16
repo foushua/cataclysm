@@ -15,10 +15,11 @@ export default class Main extends Scene {
         this.traps = {};
         this.message = null;
         this.debug = null;
+        this.tramp = {};
         this.audios = { music: {}, effect: {} };
         this.effects = { fear: false, speed: false, slow: false };
         this.cursors = this.input.keyboard.createCursorKeys();
-        this.spawnCoords = { x: 160, y: 4840 }
+        this.spawnCoords = { x: 5250, y: 4840 }
 
         this.server = Server(`${location.hostname}:9208`);
         this.players = {};
@@ -133,7 +134,7 @@ export default class Main extends Scene {
         this.tiles.trampTiles = this.maps.addTilesetImage('trampoline');
         this.layers.trampLayer = this.maps.createDynamicLayer('Tramp', this.tiles.trampTiles, 0, 0);
 
-        this.layers.trampLayer.setTileIndexCallback(31, this.TrampoJump, this);
+        this.layers.trampLayer.setTileIndexCallback(39, this.TrampoJump, this);
         this.physics.add.overlap(this.player, this.layers.trampLayer);
     }
 
@@ -213,7 +214,7 @@ export default class Main extends Scene {
         });
         this.physics.add.collider(this.player, this.traps.spikes, this.killPlayer, null, this);
     }
-
+    
     /**
      * This function is used to manage the death of a player
      */
