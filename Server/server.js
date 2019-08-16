@@ -11,8 +11,8 @@ Server.on('connect', (Socket) => {
 	Server.emit('player:spawn', Socket.id);
 	Socket.emit('player:all', players);
 
-	Socket.on('player:move', (id, data) => {
-		Server.emit('player:moved', id, data.position, data.flip);
+	Socket.on('player:move', (data) => {
+		Server.emit('player:moved', Socket.id, data.position, data.flip);
 	});
 
 	Socket.on('player:animate', (animation, state) => {
