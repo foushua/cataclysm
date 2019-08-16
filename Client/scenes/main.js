@@ -20,7 +20,7 @@ export default class Main extends Scene {
         this.audios = { music: {}, effect: {} };
         this.effects = { fear: false, speed: false, slow: false, fly:false, onPlatform: false };
         this.cursors = this.input.keyboard.createCursorKeys();
-        this.spawnCoords = { x: 160, y: 1540 }
+        this.spawnCoords = { x: 7826, y: 636 }
 
         this.server = Server(`${location.hostname}:9208`);
         this.players = {};
