@@ -15,6 +15,7 @@ export default class Main extends Scene {
         this.traps = {};
         this.clouds = {};
         this.message = null;
+        this.tramp = {};
         this.debug = null;
         this.audios = { music: {}, effect: {} };
         this.effects = { fear: false, speed: false, slow: false, onPlatform: false };
@@ -213,6 +214,20 @@ export default class Main extends Scene {
             spike.setAlpha(0);
         });
         this.physics.add.collider(this.player, this.traps.spikes, this.killPlayer, null, this);
+    }
+
+    manageTrampos() {
+        this.tramp.tramps = this.physics.add.group({
+            allowGravity: false,
+            immovable: true
+        });
+
+        let trampObjects = this.maps.getObjectLayer('Tramps')['objects'];
+        trampObjects.forEach(trampObject => {
+            // Add new spikes to our sprite group, change the start y position to meet the platform
+            const trampu = this.tramp.tramps.create(trampObject.x, trampObject.y - trampObject.height, 'trampos').setOrigin(0, 0);
+        });
+        this.physics.add.collider(this.player, this.tramp.tramps, this.TrampoJump, null, this);
     }
 
     manageClouds() {
@@ -464,6 +479,7 @@ export default class Main extends Scene {
         this.createBonus();
         this.manageSpikes();
         this.manageClouds();
+        this.manageTrampos();
 
         // Create message displayed to screen
         this.message = this.add.text(20, 570, null, {

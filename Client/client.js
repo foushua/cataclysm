@@ -13,7 +13,7 @@ class Game extends Phaser.Game {
             width: window.innerWidth * Math.round(window.devicePixelRatio), height: window.innerHeight * Math.round(window.devicePixelRatio),
             // scene: [Loading, Main],
             scene: [Menu, Loading, Main],
-            disableContextMenu: true,
+            disableContextMenu: false,
             enableDebug: process.env.NODE_ENV === 'development',
             input: { keyboard: true, mouse: true, touch: false, gamepad: false },
             physics: { 
