@@ -58,7 +58,7 @@ export default class Main extends Scene {
      */
     createPlayer(position = this.spawnCoords) {
         this.player = this.physics.add.sprite(position.x, position.y, 'player');
-        this.player.setScale(1)
+        this.player.setScale(.6)
             .setSize(95,120)
             .setOffset(35,10)
             .setBounce(0) // our player will bounce from items
@@ -166,7 +166,7 @@ export default class Main extends Scene {
         this.audios.effect.flute  = this.sound.add('effect:flute', { volume: .2 });
         this.audios.effect.twang  = this.sound.add('effect:twang', { volume: 1 });
 
-        this.audios.music.default = this.sound.add('music:default', { volume: .2 });
+        this.audios.music.default = this.sound.add('music:default', { volume: .2 }).play();
     }
 
     /**
