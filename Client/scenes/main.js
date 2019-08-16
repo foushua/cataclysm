@@ -83,7 +83,7 @@ export default class Main extends Scene {
             id, sprite: this.physics.add.sprite(position.x, position.y, 'player')
         }};
 
-        this.players[id].sprite.setScale(1)
+        this.players[id].sprite.setScale(.6)
             .setSize(95,120)
             .setOffset(35,10)
             .setBounce(0) // our player will bounce from items
