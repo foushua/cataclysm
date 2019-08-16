@@ -216,6 +216,9 @@ export default class Main extends Scene {
         this.physics.add.collider(this.player, this.traps.spikes, this.killPlayer, null, this);
     }
 
+    /**
+     * This function is used to register and handle all trampolines.
+     */
     manageTrampos() {
         this.tramp.tramps = this.physics.add.group({
             allowGravity: false,
@@ -230,6 +233,9 @@ export default class Main extends Scene {
         this.physics.add.collider(this.player, this.tramp.tramps, this.TrampoJump, null, this);
     }
 
+    /**
+     * This function is used to manage the clouds.
+     */
     manageClouds() {
         this.clouds.cloud = this.physics.add.group({
             customSeparateX: true,
@@ -272,6 +278,9 @@ export default class Main extends Scene {
 
     }
 
+    /**
+     * I know what this function is for, but is it really useful to comment on it?
+     */
     landOnCloud () {
         // console.log(this)
         this.effects.onPlatform = true;
@@ -400,6 +409,11 @@ export default class Main extends Scene {
         }, 3000);
     }
 
+    /**
+     * This function is used to handlethe trampoline.
+     * @param {Object} sprite 
+     * @param {Object} tile
+     */
     TrampoJump(sprite, tile){
         this.player.body.setVelocityY(-1000);  
         this.audios.effect.twang.play()
