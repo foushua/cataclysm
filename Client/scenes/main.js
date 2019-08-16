@@ -428,10 +428,8 @@ export default class Main extends Scene {
             // Handle player moving
             this.server.on('player:moved', (id, position, flip) =>  {
                 if (id != this.server.id) {
-                    this.players[id].sprite.setX(position.x),
-                    this.players[id].sprite.setY(position.y);
-                    this.players[id].sprite.setFlipX(flip.x);
-                    this.players[id].sprite.setFlipY(flip.y);
+                    this.players[id].sprite.setPosition(position.x, position.y, 0, 0);
+                    this.players[id].sprite.setFlip(flip.x, flip.y);
                 }
             });
 
@@ -499,12 +497,14 @@ export default class Main extends Scene {
 
         if (this.player.alive) {
 
-            // If "this.players" is not empty, send the player position to all connected players
-            if (Object.keys(this.players).length != 0) {
-                this.server.emit('player:move', this.server.id, {
-                    position: { x: this.player.x, y: this.player.y },
-                    flip: { x: this.player.flipX, y: this.player.flipY }
-                });
+            if (this.cursors.left.isDown || this.cursors.right.isDown || !this.player.body.onFloor()) {
+                // If "this.players" is not empty, send the player position to all connected players
+                if (Object.keys(this.players).length != 0) {
+                    this.server.emit('player:move', {
+                        position: { x: this.player.x, y: this.player.y },
+                        flip: { x: this.player.flipX, y: this.player.flipY },
+                    });
+                }
             }
 
             if (this.cursors.left.isDown) {
