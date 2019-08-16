@@ -253,11 +253,12 @@ export default class Main extends Scene {
                 ]
             })
         })
-        this.physics.add.collider(this.player, this.clouds.cloud, this.onCloud)
+        this.physics.add.collider(this.player, this.clouds.cloud, this.landOnCloud, null, this)
 
     }
 
-    onCloud (cloud,player) {
+    landOnCloud () {
+        // console.log(this)
         this.effects.onPlatform = true;
     }
 
@@ -509,14 +510,14 @@ export default class Main extends Scene {
             if (this.cursors.left.isDown) {
                 this.player.body.setVelocityX(-moveSpeed); // move left
                 this.player.flipX = true; // flip the sprite to the left
-                if (this.player.body.onFloor()) {
+                if (this.player.body.onFloor() || this.effects.onPlatform) {
                     this.player.anims.play('walk', true); // play walk animation
                     this.server.emit('player:animate', 'walk', true);
                 }
             } else if (this.cursors.right.isDown) {
                 this.player.body.setVelocityX(moveSpeed); // move right
                 this.player.flipX = false; // use the original sprite looking to the right
-                if (this.player.body.onFloor()) {
+                if (this.player.body.onFloor() || this.effects.onPlatform) {
                     this.player.anims.play('walk', true); // play walk animation
                     this.server.emit('player:animate', 'walk', true);
                 }
@@ -528,12 +529,13 @@ export default class Main extends Scene {
                 }
             }  
             
-            if (this.cursors.up.isDown && this.player.body.onFloor()) {
+            if (this.cursors.up.isDown && (this.player.body.onFloor() || this.effects.onPlatform)) {
                 this.audios.effect.jump.play();
                 this.player.body.setVelocityY(-800); // Jump
+                this.effects.onPlatform = false;
             }
 
-            if (!this.player.body.onFloor() && !this.effects.fear) {
+            if (!this.player.body.onFloor() && !this.effects.fear && !this.effects.onPlatform) {
                 this.player.anims.play('jump', true); // play jump animation
                 this.server.emit('player:animate', 'jump', true);
             }
@@ -545,6 +547,12 @@ export default class Main extends Scene {
 
             if (this.cursors.space.isDown) {
                 this.audios.effect.meow.play();
+            }
+
+            if (this.effects.onPlatform && this.player.body.velocity.x === 0){
+                this.player.anims.play('idle', true);
+            } else {
+                this.effects.onPlatform = false;
             }
 
         }
