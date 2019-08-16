@@ -13,10 +13,11 @@ export default class Main extends Scene {
         this.layers = {};
         this.player = null;
         this.traps = {};
+        this.clouds = {};
         this.message = null;
         this.debug = null;
         this.audios = { music: {}, effect: {} };
-        this.effects = { fear: false, speed: false, slow: false };
+        this.effects = { fear: false, speed: false, slow: false, onPlatform: false };
         this.cursors = this.input.keyboard.createCursorKeys();
         this.spawnCoords = { x: 160, y: 1540 }
 
@@ -213,6 +214,53 @@ export default class Main extends Scene {
         });
         this.physics.add.collider(this.player, this.traps.spikes, this.killPlayer, null, this);
     }
+
+    manageClouds() {
+        this.clouds.cloud = this.physics.add.group({
+            customSeparateX: true,
+            customSeparateY: true,
+            allowGravity: false,
+            immovable: true,
+            playerLocked: false
+        });
+
+        let cloudObjects = this.maps.getObjectLayer('Cloud')['objects'];
+        console.log(cloudObjects)
+        cloudObjects.forEach(cloudObject => {
+            const cloud = this.clouds.cloud.create(cloudObject.x, cloudObject.y - cloudObject.height, 'cloud').setOrigin(0,0).setScale(2);
+
+            const moveX = cloudObject.properties.find(obj => obj.name == 'moveX').value
+            const moveY = cloudObject.properties.find(obj => obj.name == 'moveY').value
+
+            console.log(moveX)
+
+            this.tweens.timeline({
+                targets: cloud.body.velocity,
+                loop: -1,
+                tweens: [
+                    {   
+                        x: moveX,
+                        y: moveY,
+                        duration: 1000, 
+                        ease: 'Stepped' 
+                    },
+                    {   
+                        x: -Math.abs(moveX), 
+                        y: -Math.abs(moveY), 
+                        duration: 1000, 
+                        ease: 'Stepped' 
+                    }
+                ]
+            })
+        })
+        this.physics.add.collider(this.player, this.clouds.cloud, this.onCloud)
+
+    }
+
+    onCloud (cloud,player) {
+        this.effects.onPlatform = true;
+    }
+
 
     /**
      * This function is used to manage the death of a player
@@ -412,6 +460,7 @@ export default class Main extends Scene {
         this.registerAnimations();
         this.createBonus();
         this.manageSpikes();
+        this.manageClouds();
 
         // Create message displayed to screen
         this.message = this.add.text(20, 570, null, {
