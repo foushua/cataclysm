@@ -1,20 +1,504 @@
 import { Scene } from 'phaser';
+import Server from 'socket.io-client';
 
 export default class Main extends Scene {
-   
+
     constructor() {
         super({ key: 'main' });
     }
 
-    init({ server }) {
-        this.server = server;
+    init() {
+        this.maps = null;
+        this.tiles = {};
+        this.layers = {};
+        this.player = null;
+        this.traps = {};
+        this.message = null;
+        this.debug = null;
+        this.audios = { music: {}, effect: {} };
+        this.effects = { fear: false, speed: false, slow: false };
+        this.cursors = this.input.keyboard.createCursorKeys();
+        this.spawnCoords = { x: 160, y: 4840 }
+
+        this.server = Server(`${location.hostname}:9208`);
+        this.players = {};
+    }
+    
+    /**
+     * This function is used to create world of your imagination.
+     */
+    createWorld() {
+        this.maps = this.make.tilemap({ key: 'maps' });
+
+        // Tiles and original layer
+        this.tiles.tiles = this.maps.addTilesetImage('tiles');
+        this.layers.tiles = this.maps.createDynamicLayer('World', this.tiles.tiles, 0, 0);
+        this.layers.tiles.setCollisionByExclusion([-1]); // The player will collide with this layer
+        
+        // Tiles and layer of the sea
+        this.tiles.sea = this.maps.addTilesetImage('sea');
+        this.layers.sea = this.maps.createDynamicLayer('Sea', this.tiles.sea, 0, 0);
+        
+        // Tiles and layer platforms
+        this.tiles.platform = this.maps.addTilesetImage('plateformes'); 
+        this.layers.platform = this.maps.createDynamicLayer('Plateformes', this.tiles.platform, 0, 0);
+        this.layers.platform.setCollisionByExclusion([-1]); // The player will collide with this layer
+
+        // Set the boundaries of our world
+        this.physics.world.bounds.width = this.layers.tiles.width;
+        this.physics.world.bounds.height = this.layers.tiles.height;
     }
 
-    create() {
-        this.server.onConnect(error => {
-            if (error) console.error(error);
-            console.log('We are ready to work harder! 💪😎');
+    /**
+     * This function is used to create the player.
+     * @param {Object} position
+     */
+    createPlayer(position = this.spawnCoords) {
+        this.player = this.physics.add.sprite(position.x, position.y, 'player');
+        this.player.setScale(0.6)
+            .setSize(95,120)
+            .setOffset(35,10)
+            .setBounce(0) // our player will bounce from items
+            .setCollideWorldBounds(true); // don't go out of the map
+
+        // Set the player alive
+        this.player.alive = true;
+
+        // The player collide with layers
+        this.physics.add.collider(this.layers.tiles, this.player);
+        this.physics.add.collider(this.layers.platform, this.player);
+    }
+
+    /**
+     * This function is used to create network player.
+     * @param {String} id
+     * @param {Object} position
+     */
+    createNetworkPlayer(id, position = this.spawnCoords) {
+        
+        this.players = { ...this.players, [id]: {
+            id, sprite: this.physics.add.sprite(position.x, position.y, 'player')
+        }};
+
+        this.players[id].sprite.setScale(1)
+            .setSize(95,120)
+            .setOffset(35,10)
+            .setBounce(0) // our player will bounce from items
+            .setCollideWorldBounds(true); // don't go out of the map
+
+        // Set the player id
+        this.players[id].id = id;
+
+        // Set the player alive
+        this.players[id].alive = true;
+
+        // The player collide with layers
+        this.physics.add.collider(this.layers.tiles, this.players[id].sprite);
+        this.physics.add.collider(this.layers.platform, this.players[id].sprite);
+    }
+    
+    /**
+     * This function is used to create all bonus.
+     */
+    createBonus() {
+        // Fish
+        this.tiles.fishTiles = this.maps.addTilesetImage('fish');
+        this.layers.fishLayer = this.maps.createDynamicLayer('Fish', this.tiles.fishTiles, 0, 0);
+    
+        this.layers.fishLayer.setTileIndexCallback(27, this.collectFish, this);
+        this.physics.add.overlap(this.player, this.layers.fishLayer);
+
+        // Chocolate
+        this.tiles.chocoTiles = this.maps.addTilesetImage('choco');
+        this.layers.chocoLayer = this.maps.createDynamicLayer('Choco', this.tiles.chocoTiles, 0, 0);
+
+        this.layers.chocoLayer.setTileIndexCallback(28, this.collectChoco, this);
+        this.physics.add.overlap(this.player, this.layers.chocoLayer);
+
+        // Cucumber
+        this.tiles.cucumTiles = this.maps.addTilesetImage('cucumber');
+        this.layers.cucumLayer = this.maps.createDynamicLayer('Cucumber', this.tiles.cucumTiles, 0, 0);
+
+        this.layers.cucumLayer.setTileIndexCallback(29, this.collectCucum, this);
+        this.physics.add.overlap(this.player, this.layers.cucumLayer);
+
+        // Bird
+        this.tiles.birdTiles = this.maps.addTilesetImage('bird');
+        this.layers.birdLayer = this.maps.createDynamicLayer('Bird', this.tiles.birdTiles, 0, 0);
+
+        this.layers.birdLayer.setTileIndexCallback(30, this.collectBird, this);
+        this.physics.add.overlap(this.player, this.layers.birdLayer);
+
+        // Trampoline
+        this.tiles.trampTiles = this.maps.addTilesetImage('trampoline');
+        this.layers.trampLayer = this.maps.createDynamicLayer('Tramp', this.tiles.trampTiles, 0, 0);
+
+        this.layers.trampLayer.setTileIndexCallback(31, this.TrampoJump, this);
+        this.physics.add.overlap(this.player, this.layers.trampLayer);
+    }
+
+    /**
+     * This function is used to apply all camera settings.
+     */
+    manageCamera() {
+        // set bounds so the camera won't go outside the game world
+        this.cameras.main.setBounds(0, 0, this.maps.widthInPixels, this.maps.heightInPixels);
+        // make the camera follow the player
+        this.cameras.main.startFollow(this.player);
+        // set background color, so the sky is not black    
+        this.cameras.main.setBackgroundColor('#ccccff'); 
+    }
+
+    /**
+     * This function is used to register all audios.
+     */
+    registerAudios() {
+        this.audios.effect.jump = this.sound.add('effect:jump', { volume: .5 });
+        this.audios.effect.meow = this.sound.add('effect:meow', { volume: .2 });
+        this.audios.effect.knife = this.sound.add('effect:knife', { volume: 1 });
+        this.audios.effect.catDeath = this.sound.add('effect:death', { volume: .9 });
+        this.audios.effect.rocket = this.sound.add('effect:rocket', { volume: 1 });
+        this.audios.effect.scream = this.sound.add('effect:scream', { volume: .4 });
+        this.audios.effect.vomit  = this.sound.add('effect:vomit', { volume: 1 });
+        this.audios.effect.flute  = this.sound.add('effect:flute', { volume: .2 });
+        this.audios.effect.twang  = this.sound.add('effect:twang', { volume: 1 });
+
+        this.audios.music.default = this.sound.add('music:default', { volume: .2 });
+    }
+
+    /**
+     * This function is used to register all animations.
+     */
+    registerAnimations() {
+        this.anims.create({
+            key: 'walk', frameRate: 60, repeat: -1,
+            frames: this.anims.generateFrameNames('player', { prefix: 'Run_', start: 1, end: 30, zeroPad: 3 })
         });
+    
+        this.anims.create({
+            key: 'idle', frameRate: 60, repeat: -1,
+            frames: this.anims.generateFrameNames('player', { prefix: 'Idle_', start:1, end: 36, zeroPad:3 })
+        });
+
+        this.anims.create({
+            key: 'jump', frameRate: 60, repeat: -1,
+            frames: this.anims.generateFrameNames('player', { prefix: 'Jump_', start: 1, end: 36, zeroPad: 3})
+        });
+
+        this.anims.create({
+            key: 'fear', frameRate: 60, repeat: -1,
+            frames: this.anims.generateFrameNames('player', { prefix: 'Fear_', start:1, end: 5, zeroPad:3 })
+        })
+        
+        this.anims.create({
+            key: 'ded', frameRate: 10,
+            frames: [{ key: 'player', frame: 'Ded' }]
+        });
+    }
+
+    /**
+     * This function is used to register and handle all spikes.
+     */
+    manageSpikes() {
+        this.traps.spikes = this.physics.add.group({
+            allowGravity: false,
+            immovable: true
+        });
+
+        let spikeObjects = this.maps.getObjectLayer('Spikes')['objects'];
+        spikeObjects.forEach(spikeObject => {
+            // Add new spikes to our sprite group, change the start y position to meet the platform
+            const spike = this.traps.spikes.create(spikeObject.x, spikeObject.y - spikeObject.height, 'spikeTrap').setOrigin(0, 0);
+            spike.setAlpha(0);
+        });
+        this.physics.add.collider(this.player, this.traps.spikes, this.killPlayer, null, this);
+    }
+
+    /**
+     * This function is used to manage the death of a player
+     */
+    killPlayer (sprite, tile) {
+        this.player.alive = false;
+        this.physics.world.colliders.destroy();
+        this.cameras.main.stopFollow();
+        this.player.anims.play('ded', true);
+        
+        this.player.body.allowRotation = true;
+        this.player.body.angularVelocity = 500;
+        this.player.body.setVelocityX((Math.random() * 1000) - 500);
+        this.player.body.setVelocityY(-200);
+    
+        this.player.setCollideWorldBounds(false);
+
+        this.audios.effect.knife.play();
+        this.audios.effect.catDeath.play();
+
+        tile.setAlpha(1);
+        setTimeout(() => {
+            tile.setAlpha(0);
+        }, 5000)
+
+        // Player respawn
+        setTimeout((position = this.spawnCoords) => {
+            this.cameras.main.startFollow(this.player);
+            this.player.alive = true;
+
+            // Recreation of world collisions
+            this.physics.add.collider(this.layers.tiles, this.player);
+            this.physics.add.collider(this.layers.platform, this.player);
+            this.physics.add.collider(this.player, this.traps.spikes, this.killPlayer, null, this);
+
+            // Reset player state
+            this.player.setCollideWorldBounds(true);
+            this.player.setVelocity(0,0);
+            this.player.body.angularVelocity = 0;
+            this.player.setX(position.x);
+            this.player.setY(position.y);
+            this.player.setRotation(0);
+            this.player.anims.play('idle', true);
+            this.player.body.allowRotation = false;
+
+            // Recreation of bonuses detections
+            this.physics.add.overlap(this.player, this.layers.fishLayer);
+            this.physics.add.overlap(this.player, this.layers.chocoLayer);
+            this.physics.add.overlap(this.player, this.layers.cucumLayer);
+            this.physics.add.overlap(this.player, this.layers.birdLayer);
+            this.physics.add.overlap(this.player, this.layers.trampLayer);
+        }, 2000);
+    }
+
+    /**
+     * This function is used to collect and handle the fish.
+     * @param {Object} sprite 
+     * @param {Object} tile 
+     */
+    collectFish(sprite, tile) {
+        this.layers.fishLayer.removeTileAt(tile.x, tile.y);
+        this.effects.speed = true;
+        this.message.setText('poisson !!');
+        this.audios.effect.rocket.play();
+        setTimeout(() => {
+            this.effects.speed = false;
+            this.message.setText('');
+        }, 2000);
+    }
+
+    /**
+     * This function is used to collect and handle the chocolate.
+     * @param {Object} sprite 
+     * @param {Object} tile
+     */
+    collectChoco(sprite, tile) {
+        this.layers.chocoLayer.removeTileAt(tile.x, tile.y);
+        this.effects.slow = true;
+        this.message.setText('Beurk chocolat !!');
+        this.audios.effect.vomit.play();
+        setTimeout(() => {
+            this.effects.slow = false;
+            this.message.setText('');
+        }, 2000);
+    }
+
+    /**
+     * This function is used to collect and handle the cucumber.
+     * @param {Object} sprite 
+     * @param {Object} tile
+     */
+    collectCucum(sprite, tile) {
+        let frightened;
+        this.layers.cucumLayer.removeTileAt(tile.x, tile.y);
+        this.effects.fear = true;
+        this.player.body.setVelocityX((Math.random() * 1000) - 500);
+        this.player.body.setVelocityY(-500);
+        this.message.setText('Aaaaaaah un concombre !!');
+        this.audios.effect.scream.play();
+        setTimeout(() => {
+            this.effects.fear = false;
+            clearInterval(frightened);
+            this.message.setText('');
+        }, 1800);
+    }
+
+    /**
+     * This function is used to collect and handle the bird.
+     * @param {Object} sprite 
+     * @param {Object} tile
+     */
+    collectBird(sprite, tile) {
+        this.layers.birdLayer.removeTileAt(tile.x, tile.y);
+        this.effects.fly = true;
+        this.message.setText('Je voooole !!');
+        this.audios.effect.flute.play();
+        setTimeout(() => {
+            this.effects.fly = false;
+            this.audios.effect.flute.stop();
+            this.message.setText('');
+        }, 3000);
+    }
+
+    TrampoJump(sprite, tile){
+        this.player.body.setVelocityY(-1000);  
+        this.audios.effect.twang.play()
+    }
+
+    /**
+     * These function is used to display all debug informations.
+     */
+    debugging() {
+        return `Debugging Cataclysm (Phaser ${Phaser.VERSION})
+        \nFramerate: ${Math.floor(this.game.loop.actualFps)}
+        \nNetwork: ${this.server.connected ? `Connected` : `Disconnected`}
+        \nCoordinates: X:${Math.floor(this.player.x)} Y:${Math.floor(this.player.y)}`;
+    }
+
+    /**
+     * This function is native to Phaser.io, is used to create the scene.
+     */
+    create() {
+
+        this.server.on('connect', () => {
+            console.log('We are ready to work harder! 💪😎');
+
+            // Request all connected users
+            this.server.on('player:all', (players) => {
+                players.forEach((player) => {
+                    if (this.server.id != player) {
+                        this.createNetworkPlayer(player);
+                    }
+                });
+            });
+
+            // Handle player spawning
+            this.server.on('player:spawn', id => {
+                if (id != this.server.id) this.createNetworkPlayer(id);
+                this.server.emit('player:spawned', id);
+                
+                console.log(`${id} was connected 😁`, this.players);
+            });
+
+            // Handle player moving
+            this.server.on('player:moved', (id, position, flip) =>  {
+                if (id != this.server.id) {
+                    this.players[id].sprite.setX(position.x),
+                    this.players[id].sprite.setY(position.y);
+                    this.players[id].sprite.setFlipX(flip.x);
+                    this.players[id].sprite.setFlipY(flip.y);
+                }
+            });
+
+            // Handle player animation
+            this.server.on('player:animated', (id, animation, state = true) => {
+                if (id != this.server.id) {
+                    this.players[id].sprite.anims.play(animation, state);
+                }
+            });
+
+            // Handle player unspawn
+            this.server.on('player:unspawn', id => {
+                this.players[id].sprite.destroy();
+                this.server.emit('player:unspawned');
+                delete this.players[id];
+
+                console.log(`${id} was disconnected 😞`, this.players);
+            });
+
+        });
+        
+        this.createWorld();
+        this.registerAudios();
+
+        this.createPlayer();
+        this.manageCamera();
+        this.registerAnimations();
+        this.createBonus();
+        this.manageSpikes();
+
+        // Create message displayed to screen
+        this.message = this.add.text(20, 570, null, {
+            fontSize: '20px',
+            fill: '#ffffff'
+        }).setScrollFactor(0);
+
+        // Create the debugging
+        if (process.env.NODE_ENV === 'development') {
+            this.debug = this.add.text(20, 20, this.debugging(), {
+                fontSize: '20px',
+                fill: '#ff0',
+                backgroundColor: '#000',
+                padding: { x:10, y:10 }
+            }).setScrollFactor(0);
+        }
+    } 
+
+    /**
+     * This function is native to Phaser.io, is used to update the scene.
+     */
+    update() {  
+        if (process.env.NODE_ENV === 'development') this.debug.setText(this.debugging());
+
+        let moveSpeed;
+        if (this.effects.fear){
+            moveSpeed = 0;
+        } else if (this.effects.speed) {
+            moveSpeed = 750;
+        } else if (this.effects.slow) {
+            moveSpeed = 150;
+        } else {
+            moveSpeed = 500;
+        }
+
+        if (this.player.alive) {
+
+            // If "this.players" is not empty, send the player position to all connected players
+            if (Object.keys(this.players).length != 0) {
+                this.server.emit('player:move', this.server.id, {
+                    position: { x: this.player.x, y: this.player.y },
+                    flip: { x: this.player.flipX, y: this.player.flipY }
+                });
+            }
+
+            if (this.cursors.left.isDown) {
+                this.player.body.setVelocityX(-moveSpeed); // move left
+                this.player.flipX = true; // flip the sprite to the left
+                if (this.player.body.onFloor()) {
+                    this.player.anims.play('walk', true); // play walk animation
+                    this.server.emit('player:animate', 'walk', true);
+                }
+            } else if (this.cursors.right.isDown) {
+                this.player.body.setVelocityX(moveSpeed); // move right
+                this.player.flipX = false; // use the original sprite looking to the right
+                if (this.player.body.onFloor()) {
+                    this.player.anims.play('walk', true); // play walk animation
+                    this.server.emit('player:animate', 'walk', true);
+                }
+            } else {
+                this.player.body.setVelocityX(0);
+                if (this.player.body.onFloor() && !this.effects.fear) {
+                    this.player.anims.play('idle', true); // play idle animation
+                    this.server.emit('player:animate', 'idle', true);
+                }
+            }  
+            
+            if (this.cursors.up.isDown && this.player.body.onFloor()) {
+                this.audios.effect.jump.play();
+                this.player.body.setVelocityY(-800); // Jump
+            }
+
+            if (!this.player.body.onFloor() && !this.effects.fear) {
+                this.player.anims.play('jump', true); // play jump animation
+                this.server.emit('player:animate', 'jump', true);
+            }
+
+            if (this.effects.fear){
+                this.player.anims.play('fear', true);
+                this.server.emit('player:animate', 'fear', true);
+            }
+
+            if (this.cursors.space.isDown) {
+                this.audios.effect.meow.play();
+            }
+
+        }
     }
 
 }

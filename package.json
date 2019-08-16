@@ -10,10 +10,10 @@
   "scripts": {
     "dev": "cross-env NODE_ENV=development npm-run-all --parallel client:serve server:serve",
     "build": "npm run client:build",
-    "start": "node server/server.js",
+    "start": "node Server/server.js",
     "client:build": "parcel build --no-content-hash index.html --out-dir Build",
     "client:serve": "parcel serve index.html --out-dir Build",
-    "server:serve": "nodemon server/server.js"
+    "server:serve": "nodemon Server/server.js"
   },
   "staticFiles": {
     "staticPath": [
@@ -22,10 +22,9 @@
   },
   "dependencies": {
     "@babel/polyfill": "^7.4.4",
-    "@geckos.io/client": "^1.1.6",
-    "@geckos.io/server": "^1.1.6",
     "lodash": "^4.17.15",
-    "phaser": "^3.19.0"
+    "phaser": "^3.19.0",
+    "socket.io": "^2.2.0"
   },
   "devDependencies": {
     "cross-env": "^5.2.0",
