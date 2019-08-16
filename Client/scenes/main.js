@@ -18,7 +18,7 @@ export default class Main extends Scene {
         this.tramp = {};
         this.debug = null;
         this.audios = { music: {}, effect: {} };
-        this.effects = { fear: false, speed: false, slow: false, onPlatform: false };
+        this.effects = { fear: false, speed: false, slow: false, fly:false, onPlatform: false };
         this.cursors = this.input.keyboard.createCursorKeys();
         this.spawnCoords = { x: 160, y: 1540 }
 
@@ -310,6 +310,7 @@ export default class Main extends Scene {
             this.physics.add.collider(this.layers.tiles, this.player);
             this.physics.add.collider(this.layers.platform, this.player);
             this.physics.add.collider(this.player, this.traps.spikes, this.killPlayer, null, this);
+            this.physics.add.collider(this.player, this.clouds.cloud, this.landOnCloud, null, this);
 
             // Reset player state
             this.player.setCollideWorldBounds(true);
@@ -549,7 +550,7 @@ export default class Main extends Scene {
                 }
             }  
             
-            if (this.cursors.up.isDown && (this.player.body.onFloor() || this.effects.onPlatform)) {
+            if (this.cursors.up.isDown && (this.player.body.onFloor() || this.effects.onPlatform || this.effects.fly)) {
                 this.audios.effect.jump.play();
                 this.player.body.setVelocityY(-800); // Jump
                 this.effects.onPlatform = false;
