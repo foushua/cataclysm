@@ -3,7 +3,7 @@ const Server = require('socket.io')();
 
 const players = [];
 
-Server.listen(9208);
+Server.listen(process.env.PORT || 9208);
 Server.on('connect', (Socket) => {
 	console.log(`${Socket.id} was connected..`);
 	players.push(Socket.id);

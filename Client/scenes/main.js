@@ -23,7 +23,7 @@ export default class Main extends Scene {
         this.spawnCoords = { x: 160, y: 4909 }
         this.finish = null
 
-        this.server = Server(`${location.hostname}:9208`);
+        this.server = Server(process.env.SERVER_URL || `${location.hostname}:9208`);
         this.players = {};
     }
     
