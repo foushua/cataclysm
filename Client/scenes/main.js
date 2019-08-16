@@ -21,6 +21,7 @@ export default class Main extends Scene {
         this.effects = { fear: false, speed: false, slow: false, fly:false, onPlatform: false };
         this.cursors = this.input.keyboard.createCursorKeys();
         this.spawnCoords = { x: 7826, y: 636 }
+        this.finish = null
 
         this.server = Server(`${location.hostname}:9208`);
         this.players = {};
@@ -275,7 +276,19 @@ export default class Main extends Scene {
             })
         })
         this.physics.add.collider(this.player, this.clouds.cloud, this.landOnCloud, null, this)
+    }
 
+    manageFinishLine(){
+        this.finish = this.physics.add.group({
+            allowGravity: false,
+            immovable: true
+        });
+
+        let finishObjects = this.maps.getObjectLayer('Finish')['objects'];
+        finishObjects.forEach(finishObject => {
+            const finishPoint = this.finish.create(finishObject.x, finishObject.y - finishObject.height, 'food').setOrigin(0, 0);
+        });
+        this.physics.add.collider(this.player, this.finish, this.finishTrigger, null, this);
     }
 
     /**
@@ -419,6 +432,11 @@ export default class Main extends Scene {
         this.audios.effect.twang.play()
     }
 
+    finishTrigger(sprite, tile){
+        console.log("finish")
+        
+    }
+
     /**
      * These function is used to display all debug informations.
      */
@@ -495,6 +513,7 @@ export default class Main extends Scene {
         this.manageSpikes();
         this.manageClouds();
         this.manageTrampos();
+        this.manageFinishLine();
 
         // Create message displayed to screen
         this.message = this.add.text(20, 570, null, {

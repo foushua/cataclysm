@@ -40,6 +40,7 @@ export default class Loading extends Scene {
         this.load.image('moving', 'images/moving.png');
         this.load.image('cloud', 'images/cloud.png');
         this.load.image('trampos', 'images/trampos.png');
+        this.load.image('food', 'images/croquettes.png')
     
 
         // Load atlas assets
