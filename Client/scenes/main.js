@@ -20,7 +20,7 @@ export default class Main extends Scene {
         this.audios = { music: {}, effect: {} };
         this.effects = { fear: false, speed: false, slow: false, fly:false, onPlatform: false };
         this.cursors = this.input.keyboard.createCursorKeys();
-        this.spawnCoords = { x: 11457, y: 1056 }
+        this.spawnCoords = { x: 160, y: 4909 }
         this.finish = null
 
         this.server = Server(`${location.hostname}:9208`);
@@ -433,8 +433,7 @@ export default class Main extends Scene {
     }
 
     finishTrigger(sprite, tile){
-        console.log("finish")
-
+        this.server.emit('player:winning');
     }
 
     /**
@@ -490,6 +489,13 @@ export default class Main extends Scene {
             // Handle the meow of player
             this.server.on('player:meow', id => {
                 this.audios.effect.meow.play();
+            });
+
+            this.server.on('player:winned', id => {
+                this.message.setText(`${id} HAS WON!`).setScale(1.5).setStyle({ fill: '#ff0' });
+                setTimeout(() => {
+                    this.scene.start('menu');
+                }, 3000);
             });
 
             // Handle player unspawn

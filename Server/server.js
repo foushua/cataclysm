@@ -23,6 +23,10 @@ Server.on('connect', (Socket) => {
 		Server.emit('player:meow', Socket.id);
 	});
 
+	Socket.on('player:winning', () => {
+		Server.emit('player:winned', Socket.id);
+	});
+
 	Socket.on('disconnect', () => {
 		Server.emit('player:unspawn', Socket.id);
 		_.remove(players, (player) => {
