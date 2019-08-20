@@ -11,7 +11,6 @@ class Game extends Phaser.Game {
             title: "Cataclysm",
             type: Phaser.AUTO,
             width: window.innerWidth * Math.round(window.devicePixelRatio), height: window.innerHeight * Math.round(window.devicePixelRatio),
-            // scene: [Loading, Main],
             scene: [Menu, Loading, Main],
             disableContextMenu: false,
             enableDebug: process.env.NODE_ENV === 'development',

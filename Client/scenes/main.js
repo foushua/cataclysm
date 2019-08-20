@@ -20,8 +20,8 @@ export default class Main extends Scene {
         this.audios = { music: {}, effect: {} };
         this.effects = { fear: false, speed: false, slow: false, fly:false, onPlatform: false };
         this.cursors = this.input.keyboard.createCursorKeys();
-        this.spawnCoords = { x: 160, y: 4909 }
-        this.finish = null
+        this.spawnCoords = { x: 160, y: 4909 };
+        this.finish = null;
 
         this.server = Server(process.env.SERVER_URL || `${location.hostname}:9208`);
         this.players = {};
@@ -191,7 +191,7 @@ export default class Main extends Scene {
         this.anims.create({
             key: 'fear', frameRate: 60, repeat: -1,
             frames: this.anims.generateFrameNames('player', { prefix: 'Fear_', start:1, end: 5, zeroPad:3 })
-        })
+        });
         
         this.anims.create({
             key: 'ded', frameRate: 10,
@@ -210,9 +210,7 @@ export default class Main extends Scene {
 
         let spikeObjects = this.maps.getObjectLayer('Spikes')['objects'];
         spikeObjects.forEach(spikeObject => {
-            // Add new spikes to our sprite group, change the start y position to meet the platform
-            const spike = this.traps.spikes.create(spikeObject.x, spikeObject.y - spikeObject.height, 'spikeTrap').setOrigin(0, 0);
-            spike.setAlpha(0);
+            this.traps.spikes.create(spikeObject.x, spikeObject.y - spikeObject.height, 'spikeTrap').setOrigin(0, 0).setAlpha(0);
         });
         this.physics.add.collider(this.player, this.traps.spikes, this.killPlayer, null, this);
     }
@@ -228,8 +226,7 @@ export default class Main extends Scene {
 
         let trampObjects = this.maps.getObjectLayer('Tramps')['objects'];
         trampObjects.forEach(trampObject => {
-            // Add new spikes to our sprite group, change the start y position to meet the platform
-            const trampu = this.tramp.tramps.create(trampObject.x, trampObject.y - trampObject.height, 'trampos').setOrigin(0, 0);
+            this.tramp.tramps.create(trampObject.x, trampObject.y - trampObject.height, 'trampos').setOrigin(0, 0);
         });
         this.physics.add.collider(this.player, this.tramp.tramps, this.TrampoJump, null, this);
     }
@@ -247,15 +244,13 @@ export default class Main extends Scene {
         });
 
         let cloudObjects = this.maps.getObjectLayer('Cloud')['objects'];
-        console.log(cloudObjects)
         cloudObjects.forEach(cloudObject => {
             const cloud = this.clouds.cloud.create(cloudObject.x, cloudObject.y - cloudObject.height, 'cloud').setOrigin(0,0).setScale(2);
 
-            const moveX = cloudObject.properties.find(obj => obj.name == 'moveX').value
-            const moveY = cloudObject.properties.find(obj => obj.name == 'moveY').value
+            const moveX = cloudObject.properties.find(obj => obj.name == 'moveX').value;
+            const moveY = cloudObject.properties.find(obj => obj.name == 'moveY').value;
 
-            console.log(moveX)
-
+            // Animate the cloud
             this.tweens.timeline({
                 targets: cloud.body.velocity,
                 loop: -1,
@@ -274,10 +269,13 @@ export default class Main extends Scene {
                     }
                 ]
             })
-        })
-        this.physics.add.collider(this.player, this.clouds.cloud, this.landOnCloud, null, this)
+        });
+        this.physics.add.collider(this.player, this.clouds.cloud, this.landOnCloud, null, this);
     }
 
+    /**
+     * This function is used to manage the finish line.
+     */
     manageFinishLine(){
         this.finish = this.physics.add.group({
             allowGravity: false,
@@ -286,7 +284,7 @@ export default class Main extends Scene {
 
         let finishObjects = this.maps.getObjectLayer('Finish')['objects'];
         finishObjects.forEach(finishObject => {
-            const finishPoint = this.finish.create(finishObject.x, finishObject.y - finishObject.height, 'food').setOrigin(0, 0);
+            this.finish.create(finishObject.x, finishObject.y - finishObject.height, 'food').setOrigin(0, 0);
         });
         this.physics.add.collider(this.player, this.finish, this.finishTrigger, null, this);
     }
@@ -295,12 +293,13 @@ export default class Main extends Scene {
      * I know what this function is for, but is it really useful to comment on it?
      */
     landOnCloud () {
-        // console.log(this)
         this.effects.onPlatform = true;
     }
 
     /**
      * This function is used to manage the death of a player
+     * @param {Object} sprite 
+     * @param {Object} tile 
      */
     killPlayer (sprite, tile) {
         this.player.alive = false;
@@ -423,16 +422,17 @@ export default class Main extends Scene {
     }
 
     /**
-     * This function is used to handlethe trampoline.
-     * @param {Object} sprite 
-     * @param {Object} tile
+     * This function is used to handle the trampoline.
      */
-    TrampoJump(sprite, tile){
+    TrampoJump() {
         this.player.body.setVelocityY(-1000);  
-        this.audios.effect.twang.play()
+        this.audios.effect.twang.play();
     }
 
-    finishTrigger(sprite, tile){
+    /**
+     * This function is used to handle the finish event.
+     */
+    finishTrigger() {
         this.server.emit('player:winning');
     }
 
@@ -491,6 +491,7 @@ export default class Main extends Scene {
                 this.audios.effect.meow.play();
             });
 
+            // Handle the player winning
             this.server.on('player:winned', id => {
                 this.message.setText(`${id} HAS WON!`).setScale(1.5).setStyle({ fill: '#ff0' });
                 setTimeout(() => {
